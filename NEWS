@@ -1,0 +1,39 @@
+Package: future
+===============
+
+Version: 0.6.0 [2015-06-18]
+o Add multicore futures, which are futures that are resolved
+  asynchronously in a separate process.  These are only
+  supported on Unix-like systems, but not on Windows.
+
+
+Version: 0.5.1 [2015-06-18]
+o Eager and lazy futures now records the result internally
+  such that the expression is only evaluated once, even if
+  their errored values are requested multiple times.
+o Eager futures are always created regardless of error or not.
+o All Future objects are environments themselves that record
+  the expression, the call environment and optional variables.
+
+
+Version: 0.5.0 [2015-06-16]
+o lazy() "freezes" global variables at the time when
+  the future is created.  This way the result of a lazy
+  future is more likely to be the same as an eager future.
+  This is also how globals are likely to be handled by
+  asynchroneous futures.
+
+
+Version: 0.4.2 [2015-06-15]
+o plan() records the call.
+o Added demo("mandelbrot", package="future"), which can be
+  re-used by other future packages.
+
+
+Version: 0.4.1 [2015-06-14]
+o Added plan().
+o Added eager future - useful for troubleshooting.
+
+
+Version: 0.4.0 [2015-06-07]
+o Distilled Future API from (in-house) 'async' package.

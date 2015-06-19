@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title>A Future for R</title>
+
+<script type="text/javascript">
+window.onload = function() {
+  var imgs = document.getElementsByTagName('img'), i, img;
+  for (i = 0; i < imgs.length; i++) {
+    img = imgs[i];
+    // center an image if it is the only element of its parent
+    if (img.parentElement.childElementCount === 1)
+      img.parentElement.style.textAlign = 'center';
+  }
+};
+</script>
+
+<!-- Styles for R syntax highlighter -->
+<style type="text/css">
+   pre .operator,
+   pre .paren {
+     color: rgb(104, 118, 135)
+   }
+
+   pre .literal {
+     color: #990073
+   }
+
+   pre .number {
+     color: #099;
+   }
+
+   pre .comment {
+     color: #998;
+     font-style: italic
+   }
+
+   pre .keyword {
+     color: #900;
+     font-weight: bold
+   }
+
+   pre .identifier {
+     color: rgb(0, 0, 0);
+   }
+
+   pre .string {
+     color: #d14;
+   }
+</style>
+
+<!-- R syntax highlighter -->
+<script type="text/javascript">
+var hljs=new function(){function m(p){return p.replace(/&/gm,"&amp;").replace(/</gm,"&lt;")}function f(r,q,p){return RegExp(q,"m"+(r.cI?"i":"")+(p?"g":""))}function b(r){for(var p=0;p<r.childNodes.length;p++){var q=r.childNodes[p];if(q.nodeName=="CODE"){return q}if(!(q.nodeType==3&&q.nodeValue.match(/\s+/))){break}}}function h(t,s){var p="";for(var r=0;r<t.childNodes.length;r++){if(t.childNodes[r].nodeType==3){var q=t.childNodes[r].nodeValue;if(s){q=q.replace(/\n/g,"")}p+=q}else{if(t.childNodes[r].nodeName=="BR"){p+="\n"}else{p+=h(t.childNodes[r])}}}if(/MSIE [678]/.test(navigator.userAgent)){p=p.replace(/\r/g,"\n")}return p}function a(s){var r=s.className.split(/\s+/);r=r.concat(s.parentNode.className.split(/\s+/));for(var q=0;q<r.length;q++){var p=r[q].replace(/^language-/,"");if(e[p]){return p}}}function c(q){var p=[];(function(s,t){for(var r=0;r<s.childNodes.length;r++){if(s.childNodes[r].nodeType==3){t+=s.childNodes[r].nodeValue.length}else{if(s.childNodes[r].nodeName=="BR"){t+=1}else{if(s.childNodes[r].nodeType==1){p.push({event:"start",offset:t,node:s.childNodes[r]});t=arguments.callee(s.childNodes[r],t);p.push({event:"stop",offset:t,node:s.childNodes[r]})}}}}return t})(q,0);return p}function k(y,w,x){var q=0;var z="";var s=[];function u(){if(y.length&&w.length){if(y[0].offset!=w[0].offset){return(y[0].offset<w[0].offset)?y:w}else{return w[0].event=="start"?y:w}}else{return y.length?y:w}}function t(D){var A="<"+D.nodeName.toLowerCase();for(var B=0;B<D.attributes.length;B++){var C=D.attributes[B];A+=" "+C.nodeName.toLowerCase();if(C.value!==undefined&&C.value!==false&&C.value!==null){A+='="'+m(C.value)+'"'}}return A+">"}while(y.length||w.length){var v=u().splice(0,1)[0];z+=m(x.substr(q,v.offset-q));q=v.offset;if(v.event=="start"){z+=t(v.node);s.push(v.node)}else{if(v.event=="stop"){var p,r=s.length;do{r--;p=s[r];z+=("</"+p.nodeName.toLowerCase()+">")}while(p!=v.node);s.splice(r,1);while(r<s.length){z+=t(s[r]);r++}}}}return z+m(x.substr(q))}function j(){function q(x,y,v){if(x.compiled){return}var u;var s=[];if(x.k){x.lR=f(y,x.l||hljs.IR,true);for(var w in x.k){if(!x.k.hasOwnProperty(w)){continue}if(x.k[w] instanceof Object){u=x.k[w]}else{u=x.k;w="keyword"}for(var r in u){if(!u.hasOwnProperty(r)){continue}x.k[r]=[w,u[r]];s.push(r)}}}if(!v){if(x.bWK){x.b="\\b("+s.join("|")+")\\s"}x.bR=f(y,x.b?x.b:"\\B|\\b");if(!x.e&&!x.eW){x.e="\\B|\\b"}if(x.e){x.eR=f(y,x.e)}}if(x.i){x.iR=f(y,x.i)}if(x.r===undefined){x.r=1}if(!x.c){x.c=[]}x.compiled=true;for(var t=0;t<x.c.length;t++){if(x.c[t]=="self"){x.c[t]=x}q(x.c[t],y,false)}if(x.starts){q(x.starts,y,false)}}for(var p in e){if(!e.hasOwnProperty(p)){continue}q(e[p].dM,e[p],true)}}function d(B,C){if(!j.called){j();j.called=true}function q(r,M){for(var L=0;L<M.c.length;L++){if((M.c[L].bR.exec(r)||[null])[0]==r){return M.c[L]}}}function v(L,r){if(D[L].e&&D[L].eR.test(r)){return 1}if(D[L].eW){var M=v(L-1,r);return M?M+1:0}return 0}function w(r,L){return L.i&&L.iR.test(r)}function K(N,O){var M=[];for(var L=0;L<N.c.length;L++){M.push(N.c[L].b)}var r=D.length-1;do{if(D[r].e){M.push(D[r].e)}r--}while(D[r+1].eW);if(N.i){M.push(N.i)}return f(O,M.join("|"),true)}function p(M,L){var N=D[D.length-1];if(!N.t){N.t=K(N,E)}N.t.lastIndex=L;var r=N.t.exec(M);return r?[M.substr(L,r.index-L),r[0],false]:[M.substr(L),"",true]}function z(N,r){var L=E.cI?r[0].toLowerCase():r[0];var M=N.k[L];if(M&&M instanceof Array){return M}return false}function F(L,P){L=m(L);if(!P.k){return L}var r="";var O=0;P.lR.lastIndex=0;var M=P.lR.exec(L);while(M){r+=L.substr(O,M.index-O);var N=z(P,M);if(N){x+=N[1];r+='<span class="'+N[0]+'">'+M[0]+"</span>"}else{r+=M[0]}O=P.lR.lastIndex;M=P.lR.exec(L)}return r+L.substr(O,L.length-O)}function J(L,M){if(M.sL&&e[M.sL]){var r=d(M.sL,L);x+=r.keyword_count;return r.value}else{return F(L,M)}}function I(M,r){var L=M.cN?'<span class="'+M.cN+'">':"";if(M.rB){y+=L;M.buffer=""}else{if(M.eB){y+=m(r)+L;M.buffer=""}else{y+=L;M.buffer=r}}D.push(M);A+=M.r}function G(N,M,Q){var R=D[D.length-1];if(Q){y+=J(R.buffer+N,R);return false}var P=q(M,R);if(P){y+=J(R.buffer+N,R);I(P,M);return P.rB}var L=v(D.length-1,M);if(L){var O=R.cN?"</span>":"";if(R.rE){y+=J(R.buffer+N,R)+O}else{if(R.eE){y+=J(R.buffer+N,R)+O+m(M)}else{y+=J(R.buffer+N+M,R)+O}}while(L>1){O=D[D.length-2].cN?"</span>":"";y+=O;L--;D.length--}var r=D[D.length-1];D.length--;D[D.length-1].buffer="";if(r.starts){I(r.starts,"")}return R.rE}if(w(M,R)){throw"Illegal"}}var E=e[B];var D=[E.dM];var A=0;var x=0;var y="";try{var s,u=0;E.dM.buffer="";do{s=p(C,u);var t=G(s[0],s[1],s[2]);u+=s[0].length;if(!t){u+=s[1].length}}while(!s[2]);if(D.length>1){throw"Illegal"}return{r:A,keyword_count:x,value:y}}catch(H){if(H=="Illegal"){return{r:0,keyword_count:0,value:m(C)}}else{throw H}}}function g(t){var p={keyword_count:0,r:0,value:m(t)};var r=p;for(var q in e){if(!e.hasOwnProperty(q)){continue}var s=d(q,t);s.language=q;if(s.keyword_count+s.r>r.keyword_count+r.r){r=s}if(s.keyword_count+s.r>p.keyword_count+p.r){r=p;p=s}}if(r.language){p.second_best=r}return p}function i(r,q,p){if(q){r=r.replace(/^((<[^>]+>|\t)+)/gm,function(t,w,v,u){return w.replace(/\t/g,q)})}if(p){r=r.replace(/\n/g,"<br>")}return r}function n(t,w,r){var x=h(t,r);var v=a(t);var y,s;if(v){y=d(v,x)}else{return}var q=c(t);if(q.length){s=document.createElement("pre");s.innerHTML=y.value;y.value=k(q,c(s),x)}y.value=i(y.value,w,r);var u=t.className;if(!u.match("(\\s|^)(language-)?"+v+"(\\s|$)")){u=u?(u+" "+v):v}if(/MSIE [678]/.test(navigator.userAgent)&&t.tagName=="CODE"&&t.parentNode.tagName=="PRE"){s=t.parentNode;var p=document.createElement("div");p.innerHTML="<pre><code>"+y.value+"</code></pre>";t=p.firstChild.firstChild;p.firstChild.cN=s.cN;s.parentNode.replaceChild(p.firstChild,s)}else{t.innerHTML=y.value}t.className=u;t.result={language:v,kw:y.keyword_count,re:y.r};if(y.second_best){t.second_best={language:y.second_best.language,kw:y.second_best.keyword_count,re:y.second_best.r}}}function o(){if(o.called){return}o.called=true;var r=document.getElementsByTagName("pre");for(var p=0;p<r.length;p++){var q=b(r[p]);if(q){n(q,hljs.tabReplace)}}}function l(){if(window.addEventListener){window.addEventListener("DOMContentLoaded",o,false);window.addEventListener("load",o,false)}else{if(window.attachEvent){window.attachEvent("onload",o)}else{window.onload=o}}}var e={};this.LANGUAGES=e;this.highlight=d;this.highlightAuto=g;this.fixMarkup=i;this.highlightBlock=n;this.initHighlighting=o;this.initHighlightingOnLoad=l;this.IR="[a-zA-Z][a-zA-Z0-9_]*";this.UIR="[a-zA-Z_][a-zA-Z0-9_]*";this.NR="\\b\\d+(\\.\\d+)?";this.CNR="\\b(0[xX][a-fA-F0-9]+|(\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)";this.BNR="\\b(0b[01]+)";this.RSR="!|!=|!==|%|%=|&|&&|&=|\\*|\\*=|\\+|\\+=|,|\\.|-|-=|/|/=|:|;|<|<<|<<=|<=|=|==|===|>|>=|>>|>>=|>>>|>>>=|\\?|\\[|\\{|\\(|\\^|\\^=|\\||\\|=|\\|\\||~";this.ER="(?![\\s\\S])";this.BE={b:"\\\\.",r:0};this.ASM={cN:"string",b:"'",e:"'",i:"\\n",c:[this.BE],r:0};this.QSM={cN:"string",b:'"',e:'"',i:"\\n",c:[this.BE],r:0};this.CLCM={cN:"comment",b:"//",e:"$"};this.CBLCLM={cN:"comment",b:"/\\*",e:"\\*/"};this.HCM={cN:"comment",b:"#",e:"$"};this.NM={cN:"number",b:this.NR,r:0};this.CNM={cN:"number",b:this.CNR,r:0};this.BNM={cN:"number",b:this.BNR,r:0};this.inherit=function(r,s){var p={};for(var q in r){p[q]=r[q]}if(s){for(var q in s){p[q]=s[q]}}return p}}();hljs.LANGUAGES.cpp=function(){var a={keyword:{"false":1,"int":1,"float":1,"while":1,"private":1,"char":1,"catch":1,"export":1,virtual:1,operator:2,sizeof:2,dynamic_cast:2,typedef:2,const_cast:2,"const":1,struct:1,"for":1,static_cast:2,union:1,namespace:1,unsigned:1,"long":1,"throw":1,"volatile":2,"static":1,"protected":1,bool:1,template:1,mutable:1,"if":1,"public":1,friend:2,"do":1,"return":1,"goto":1,auto:1,"void":2,"enum":1,"else":1,"break":1,"new":1,extern:1,using:1,"true":1,"class":1,asm:1,"case":1,typeid:1,"short":1,reinterpret_cast:2,"default":1,"double":1,register:1,explicit:1,signed:1,typename:1,"try":1,"this":1,"switch":1,"continue":1,wchar_t:1,inline:1,"delete":1,alignof:1,char16_t:1,char32_t:1,constexpr:1,decltype:1,noexcept:1,nullptr:1,static_assert:1,thread_local:1,restrict:1,_Bool:1,complex:1},built_in:{std:1,string:1,cin:1,cout:1,cerr:1,clog:1,stringstream:1,istringstream:1,ostringstream:1,auto_ptr:1,deque:1,list:1,queue:1,stack:1,vector:1,map:1,set:1,bitset:1,multiset:1,multimap:1,unordered_set:1,unordered_map:1,unordered_multiset:1,unordered_multimap:1,array:1,shared_ptr:1}};return{dM:{k:a,i:"</",c:[hljs.CLCM,hljs.CBLCLM,hljs.QSM,{cN:"string",b:"'\\\\?.",e:"'",i:"."},{cN:"number",b:"\\b(\\d+(\\.\\d*)?|\\.\\d+)(u|U|l|L|ul|UL|f|F)"},hljs.CNM,{cN:"preprocessor",b:"#",e:"$"},{cN:"stl_container",b:"\\b(deque|list|queue|stack|vector|map|set|bitset|multiset|multimap|unordered_map|unordered_set|unordered_multiset|unordered_multimap|array)\\s*<",e:">",k:a,r:10,c:["self"]}]}}}();hljs.LANGUAGES.r={dM:{c:[hljs.HCM,{cN:"number",b:"\\b0[xX][0-9a-fA-F]+[Li]?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+(?:[eE][+\\-]?\\d*)?L\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+\\.(?!\\d)(?:i\\b)?",e:hljs.IMMEDIATE_RE,r:1},{cN:"number",b:"\\b\\d+(?:\\.\\d*)?(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\.\\d+(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"keyword",b:"(?:tryCatch|library|setGeneric|setGroupGeneric)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\.",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\d+(?![\\w.])",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\b(?:function)",e:hljs.IMMEDIATE_RE,r:2},{cN:"keyword",b:"(?:if|in|break|next|repeat|else|for|return|switch|while|try|stop|warning|require|attach|detach|source|setMethod|setClass)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"literal",b:"(?:NA|NA_integer_|NA_real_|NA_character_|NA_complex_)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"literal",b:"(?:NULL|TRUE|FALSE|T|F|Inf|NaN)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"identifier",b:"[a-zA-Z.][a-zA-Z0-9._]*\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"<\\-(?!\\s*\\d)",e:hljs.IMMEDIATE_RE,r:2},{cN:"operator",b:"\\->|<\\-",e:hljs.IMMEDIATE_RE,r:1},{cN:"operator",b:"%%|~",e:hljs.IMMEDIATE_RE},{cN:"operator",b:">=|<=|==|!=|\\|\\||&&|=|\\+|\\-|\\*|/|\\^|>|<|!|&|\\||\\$|:",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"%",e:"%",i:"\\n",r:1},{cN:"identifier",b:"`",e:"`",r:0},{cN:"string",b:'"',e:'"',c:[hljs.BE],r:0},{cN:"string",b:"'",e:"'",c:[hljs.BE],r:0},{cN:"paren",b:"[[({\\])}]",e:hljs.IMMEDIATE_RE,r:0}]}};
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 13px;
+}
+
+body {
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 20px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 {
+   font-size:2.2em;
+}
+
+h2 {
+   font-size:1.8em;
+}
+
+h3 {
+   font-size:1.4em;
+}
+
+h4 {
+   font-size:1.0em;
+}
+
+h5 {
+   font-size:0.9em;
+}
+
+h6 {
+   font-size:0.8em;
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre, img {
+  max-width: 100%;
+}
+pre {
+  overflow-x: auto;
+}
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code {
+  font-size: 92%;
+  border: 1px solid #ccc;
+}
+
+code[class] {
+  background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * {
+      background: transparent !important;
+      color: black !important;
+      filter:none !important;
+      -ms-filter: none !important;
+   }
+
+   body {
+      font-size:12pt;
+      max-width:100%;
+   }
+
+   a, a:visited {
+      text-decoration: underline;
+   }
+
+   hr {
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote {
+      padding-right: 1em;
+      page-break-inside: avoid;
+   }
+
+   tr, img {
+      page-break-inside: avoid;
+   }
+
+   img {
+      max-width: 100% !important;
+   }
+
+   @page :left {
+      margin: 15mm 20mm 15mm 10mm;
+   }
+
+   @page :right {
+      margin: 15mm 10mm 15mm 20mm;
+   }
+
+   p, h2, h3 {
+      orphans: 3; widows: 3;
+   }
+
+   h2, h3 {
+      page-break-after: avoid;
+   }
+}
+</style>
+
+<meta name="keywords" content="R, package, vignette, future, promise">
+<meta name="author" content="Henrik Bengtsson">
+
+</head>
+
+<body>
+<h1>A Future for R</h1>
+
+<h2>Introduction</h2>
+
+<p>In programming, a <em>future</em> is an abstraction for a <em>value</em> that may be available at some point in the future.  The state of a future can either be <em>unresolved</em> or <em>resolved</em>.  As soon as it is resolved, the value is available instantaneously.  If the value is queried while the future is still unresolved, the current process is <em>blocked</em> until the future is resolved.  Exactly how and when futures are resolved depends on what strategy is used to evaluate them.  For instance, a future can be resolved using a &ldquo;lazy&rdquo; strategy, which means it is resolved only when the value is requested, if at all.  Another approach is an &ldquo;eager&rdquo; strategy, which means that it starts to resolve the future as soon as it is created.  Yet other strategies may to resolve futures asynchronously, for instance, by evaluating expressions concurrently on a compute cluster.</p>
+
+<h3>Futures in R</h3>
+
+<p>The purpose of the &#39;future&#39; package is to define and provide a minimalistic Future API for R.  The package itself provides two <em>synchronous</em> mechanisms for &ldquo;lazy&rdquo; and &ldquo;eager&rdquo; futures, and one <em>asynchronous</em> one for &ldquo;multicore&rdquo; futures.  Further strategies will be implemented by other packages extending the &#39;future&#39; package.  For instance, the &#39;async&#39; package resolves futures <em>asynchronously</em> via any of the many backends that the &#39;<a href="http://cran.r-project.org/package=BatchJobs">BatchJobs</a>&#39; framework provides, e.g. distributed on a compute cluster via a job queue.  The lazy and the eager futures, which are both synchronous (blocks the main process while being resolved), provided by this package exist mainly for the purpose of illustrating how futures work and for troubleshooting code that uses other types of futures but for some reason fail when being resolved.</p>
+
+<p>Here is an example illustrating how the basics of futures work:</p>
+
+<pre><code class="r">&gt; library(future)
+&gt; f &lt;- future({
++   message(&quot;Resolving...&quot;)
++   3.14
++ })
+Resolving...
+&gt; v &lt;- value(f)
+&gt; v
+[1] 3.14
+</code></pre>
+
+<p>Note how the future is resolved as soon as we create it using <code>future()</code>.  This is because the default strategy for resolving futures in the &#39;future&#39; package is to evaluate them in an &ldquo;eager&rdquo; and synchronous manner, which emulates how R itself typically evaluates expressions, cf.</p>
+
+<pre><code class="r">&gt; v &lt;- {
++   message(&quot;Resolving...&quot;)
++   3.14
++ }
+Resolving...
+&gt; v
+[1] 3.14
+</code></pre>
+
+<p>We can switch to  a &ldquo;lazy&rdquo; evaluation strategy using the <code>plan()</code> function, e.g.</p>
+
+<pre><code class="r">&gt; plan(lazy)
+&gt; f &lt;- future({
++   message(&quot;Resolving...&quot;)
++   3.14
++ })
+&gt; v &lt;- value(f)
+Resolving...
+&gt; v
+[1] 3.14
+</code></pre>
+
+<p>In this case the future is unresolved until the point in time when we first ask for its value (which also means that a lazy future may never be resolved).</p>
+
+<h3>Promises of successful futures</h3>
+
+<p>An important part of a future is the fact that, although we do not necessarily control <em>when</em> a future is resolved, we do have a &ldquo;promise&rdquo; that it <em>will</em> be resolved (at least if its value is requested).  In other words, if we ask for the value of a future, we are guaranteed that the expression of the future will be evaluated and its value will be returned to us (or an error will be generated if the evaluation caused an error).  An alternative to a <code>future-value</code> pair of function calls is to use the <code>%&lt;=%</code> infix assignment operator (also provided by the &#39;future&#39; package).  For example,</p>
+
+<pre><code class="r">&gt; plan(lazy)
+&gt; v %&lt;=% {
++   message(&quot;Resolving...&quot;)
++   3.14
++ }
+&gt; v
+Resolving...
+[1] 3.14
+</code></pre>
+
+<p>This works by (i) creating a future and (ii) assigning its value to variable <code>v</code> as a <em>promise</em>.  Specifically, the expression/value assigned to variable <code>v</code> is promised to be evaluated/resolved (no later than) when it is requested.  Promises are built-in constructs of R (see <code>help(delayedAssign)</code>).</p>
+
+<h3>Eager, lazy and parallel futures</h3>
+
+<p>You are responsible for your own futures and how you choose to resolve them may differ depending on your needs and your resources.  The &#39;future&#39; package provides two <em>synchronous</em> futures, namely &ldquo;lazy&rdquo; and &ldquo;eager&rdquo;, implemented by functions <code>lazy()</code> and <code>eager()</code>.  It also provides one <em>asynchronous</em> future, the &ldquo;multicore&rdquo; future, implemented by function <code>multicore()</code>.  The latter is available on systems where R supports multicore processing, that is, on Unix-like operating systems, but not on Windows.  On non-supported systems, multicore futures automatically becomes eager futures.</p>
+
+<p>Since an asynchronous strategy is more likely to be used in practice, the built-in eager and lazy mechanisms try to emulate those as far as possible while at the same time evaluating them in a synchronous way.  For example, the default is that the future expression is evaluated in <em>a local environment</em> (cf. <code>help(&quot;local&quot;)</code>), which means that any assignments are done to local variables only - such that the environment of the main/calling process is unaffected.  Here is an example:</p>
+
+<pre><code class="r">&gt; a &lt;- 2.71
+&gt; x %&lt;=% { a &lt;- 3.14 }
+&gt; x
+[1] 3.14
+&gt; a
+[1] 2.71
+</code></pre>
+
+<p>This shows that <code>a</code> in the calling environment is unaffected by the expression evaluated by the future.</p>
+
+<p>If needed, it is possible to evaluate both lazy and eager futures in the calling environment (but then global variables cannot be &ldquo;frozen&rdquo;).  For instance,</p>
+
+<pre><code class="r">&gt; plan(lazy, local=FALSE, globals=FALSE)
+&gt; a &lt;- 2.71
+&gt; x %&lt;=% { a &lt;- 3.14 }
+&gt; a
+[1] 2.71
+&gt; x
+[1] 3.14
+&gt; a
+[1] 3.14
+</code></pre>
+
+<h3>Different strategies for different futures</h3>
+
+<p>Sometimes one may want to use an alternative evaluation strategy for a specific future.  Although one can use <code>old &lt;- plan(new)</code> and afterward <code>plan(old)</code> to temporarily switch strategies, a simpler approach is to use the <code>%plan%</code> operator, e.g.</p>
+
+<pre><code class="r">&gt; plan(eager)
+&gt; a &lt;- 0
+&gt; x %&lt;=% { 3.14 }
+&gt; y %&lt;=% { a &lt;- 2.71 } %plan% lazy(local=FALSE, globals=FALSE)
+&gt; x
+[1] 3.14
+&gt; a
+[1] 0
+&gt; y
+[1] 2.71
+&gt; a
+[1] 2.71
+</code></pre>
+
+<p>Above, the expression for <code>x</code> is evaluated eagerly (in a local environment), whereas the one for <code>y</code> is evaluated lazily in the calling environment.</p>
+
+<h3>Nested futures</h3>
+
+<p>It is possible to nest futures in multiple levels and each of the nested futures may be resolved using a different strategy, e.g.</p>
+
+<pre><code class="r">&gt; plan(lazy)
+&gt; c %&lt;=% {
++   message(&quot;Resolving &#39;c&#39;&quot;)
++   a %&lt;=% {
++     message(&quot;Resolving &#39;a&#39;&quot;)
++     3
++   } %plan% eager
++   b %&lt;=% {
++     message(&quot;Resolving &#39;b&#39;&quot;)
++     -9 * a
++   }
++   message(&quot;Local variable &#39;x&#39;&quot;)
++   x &lt;- b / 3
++   abs(x)
++ }
+&gt; d &lt;- 42
+&gt; d
+[1] 42
+&gt; c
+Resolving &#39;c&#39;
+Resolving &#39;a&#39;
+Local variable &#39;x&#39;
+Resolving &#39;b&#39;
+[1] 6
+</code></pre>
+
+<h2>Assigning futures to environments and list environments</h2>
+
+<p>The <code>%&lt;=%</code> assignment operator <em>cannot</em> be used in all cases where the regular <code>&lt;-</code> assignment operator can be used.  For instance, it is <em>not</em> possible to assign future values to a <em>list</em>;</p>
+
+<pre><code class="r">&gt; x &lt;- list()
+&gt; x$a %&lt;=% { 2.71 }
+Error: Subsetting can not be done on a &#39;list&#39;; only to an environment: &#39;x$a&#39;
+</code></pre>
+
+<p>This is because <em>promises</em> themselves cannot be assigned to lists.  More precisely, the limitation of future assignments are the same as those for assignments via the <code>assign()</code> function, which means you can only assign <em>future values</em> to environments (defaulting to the current environment) but nothing else, i.e. not to elements of a vector, matrix, list or a data.frame and so on.  To assign a future value to an environment, do:</p>
+
+<pre><code class="r">&gt; env &lt;- new.env()
+&gt; env$a %&lt;=% { 1 }
+&gt; env[[&quot;b&quot;]] %&lt;=% { 2 }
+&gt; name &lt;- &quot;c&quot;
+&gt; env[[name]] %&lt;=% { 3 }
+&gt; as.list(env)
+$a
+[1] 1
+
+$b
+[1] 2
+
+$c
+[1] 3
+</code></pre>
+
+<p>If <em>indexed subsetting</em> is needed for assignments, the &#39;<a href="http://cran.r-project.org/package=listenv">listenv</a>&#39; package provides <em>list environments</em>, which technically are environments, but at the same time emulate how lists can be indexed.  For example,</p>
+
+<pre><code class="r">&gt; library(listenv)
+&gt; x &lt;- listenv()
+&gt; for (ii in 1:3) {
++   x[[ii]] %&lt;=% { rnorm(ii) }
++ }
+&gt; names(x) &lt;- c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;)
+</code></pre>
+
+<p>Future values of a list environment can be retrieved individually as <code>x[[&quot;b&quot;]]</code> and <code>x$b</code>, but also as <code>x[[2]]</code>, e.g.</p>
+
+<pre><code class="r">&gt; x[[2]]
+[1] -0.6735019  0.9873067
+&gt; x$b
+[1] -0.6735019  0.9873067
+</code></pre>
+
+<p>Just as for any type of environment, all  values of a list environment can be retrieved as a list using <code>as.list(x)</code>.  However, remember that future assignments were used, which means that unless they are all resolved, the calling process will block until all values are available.</p>
+
+<h2>Failed futures</h2>
+
+<p>Sometimes the future is not what you expected.  If an error occurs while evaluating a future, the error is propagated and thrown as an error in the calling environment <em>when the future value is requested</em>.  For example,</p>
+
+<pre><code class="r">&gt; plan(lazy)
+&gt; f &lt;- future({
++   stop(&quot;Whoops!&quot;)
++   42
++ })
+&gt; value(f)
+Error in eval(expr, envir, enclos) : Whoops!
+</code></pre>
+
+<p>The error is thrown each time the value is requested, that is, trying to get the value again will generate the same error:</p>
+
+<pre><code class="r">&gt; value(f)
+Error in eval(expr, envir, enclos) : Whoops!
+</code></pre>
+
+<p>Exception handling of future assignments via <code>%&lt;=%</code> works analogously, e.g.</p>
+
+<pre><code class="r">&gt; plan(lazy)
+&gt; x %&lt;=% ({
++   stop(&quot;Whoops!&quot;)
++   42
++ })
+&gt; y &lt;- 3.14
+&gt; y
+[1] 3.14
+&gt; x
+Error in eval(expr, envir, enclos) : Whoops!
+&gt; x
+Error in eval(expr, envir, enclos) : Whoops!
+</code></pre>
+
+<h2>Globals</h2>
+
+<p>The &#39;future&#39; package does not provide mechanisms for controlling how global variables and functions (&ldquo;globals&rdquo;) are resolved.  Instead, this important task is passed on to the mechanism that evaluates the future expressions(*).  For instance, concurrent evaluation on compute clusters requires that globals are properly identified and exported to each compute node.  Having said this, the <code>lazy()</code> function, which implements lazy futures, does indeed look for globals and &ldquo;freezes&rdquo; them at the time point when the future is created.  This assures that the result of a lazy future will be the same regardless of when it is resolved, e.g. before or after globals change.  Since eager futures are resolved upon creation, any globals will also be resolved at this time and therefore there is no need for the <code>eager()</code> function to handle globals specifically.  If you wish to implement your own future mechanism, you might find it useful to see how <code>lazy()</code> deals with globals (which is done with help of the &#39;<a href="http://cran.r-project.org/package=globals">globals</a>&#39; package).  Due to how multicore processing is done, globals are also automatically taken care of when you are using multicore futures.</p>
+
+<p><em>Footnote</em>: (*) The task of identifying globals is a challenging problem and with asynchronous/concurrent/parallel evaluation there will always be corner cases that will not work as intended (and figuring out why can sometimes be tricky, even when troubleshooting using lazy futures).  The purpose of the &#39;<a href="http://cran.r-project.org/package=globals">globals</a>&#39; package is to try to standardize how globals are identified into one or a small number of robust strategies.  Until such a standard has been identified and implemented, the &#39;future&#39; package will not attempt to provide other packages implementing futures with an automatic service for dealing with globals.  This may change in the future (yes, this pun was also intended).</p>
+
+<h2>Demos</h2>
+
+<p>To see another illustration how the lazy and eager evaluations of futures differ, run the Mandelbrot demo of this package.  First try with the eager evaluation,</p>
+
+<pre><code class="r">library(future)
+plan(eager)
+demo(&quot;mandelbrot&quot;, package=&quot;future&quot;, ask=FALSE)
+</code></pre>
+
+<p>which closely immitates how the script would run if futures were not used.  Then try the same using lazy evaluation,</p>
+
+<pre><code class="r">plan(lazy)
+demo(&quot;mandelbrot&quot;, package=&quot;future&quot;, ask=FALSE)
+</code></pre>
+
+<p>and see if you can notice the difference in how and when statements are evaluated.</p>
+
+<h2>Contributing</h2>
+
+<p>The goal of this package is to provide a standardized and unified API for using futures in R.  What you are seeing right now is an early but sincere attempt to achieve this goal.  If you have comments or ideas how to improve the &#39;future&#39; package, I would love to hear about it.  The preferred way to get in touch is via the <a href="https://github.com/HenrikBengtsson/future/">GitHub repository</a>, where you also find the latest source code.  I am also open contributions and collaborations of any kind.</p>
+
+<hr/>
+
+<p>Copyright Henrik Bengtsson, 2015</p>
+
+</body>
+
+</html>
