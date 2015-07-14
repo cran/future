@@ -1,5 +1,5 @@
 Package: future
-Version: 0.6.0
+Version: 0.7.0
 Title: A Future API for R
 Imports: listenv, globals
 Suggests: parallel, R.rsp
@@ -12,8 +12,8 @@ LazyLoad: TRUE
 URL: https://github.com/HenrikBengtsson/future
 BugReports: https://github.com/HenrikBengtsson/future/issues
 NeedsCompilation: no
-Packaged: 2015-06-19 06:25:42 UTC; hb
+Packaged: 2015-07-14 03:40:48 UTC; hb
 Author: Henrik Bengtsson [aut, cre, cph]
 Maintainer: Henrik Bengtsson <henrikb@braju.com>
 Repository: CRAN
-Date/Publication: 2015-06-19 10:25:33
+Date/Publication: 2015-07-14 20:40:36
