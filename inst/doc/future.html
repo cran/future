@@ -265,7 +265,8 @@ Resolving...
 [1] 3.14
 </code></pre>
 
-<p>This works by (i) creating a future and (ii) assigning its value to variable <code>v</code> as a <em>promise</em>.  Specifically, the expression/value assigned to variable <code>v</code> is promised to be evaluated/resolved (no later than) when it is requested.  Promises are built-in constructs of R (see <code>help(delayedAssign)</code>).</p>
+<p>This works by (i) creating a future and (ii) assigning its value to variable <code>v</code> as a <em>promise</em>.  Specifically, the expression/value assigned to variable <code>v</code> is promised to be evaluated/resolved (no later than) when it is requested.  Promises are built-in constructs of R (see <code>help(delayedAssign)</code>).
+To get the future of a future variable, use the <code>futureOf()</code> function, e.g. <code>f &lt;- futureOf(v)</code>.</p>
 
 <h3>Eager, lazy and parallel futures</h3>
 
@@ -461,7 +462,7 @@ demo(&quot;mandelbrot&quot;, package=&quot;future&quot;, ask=FALSE)
 
 <h2>Contributing</h2>
 
-<p>The goal of this package is to provide a standardized and unified API for using futures in R.  What you are seeing right now is an early but sincere attempt to achieve this goal.  If you have comments or ideas how to improve the &#39;future&#39; package, I would love to hear about it.  The preferred way to get in touch is via the <a href="https://github.com/HenrikBengtsson/future/">GitHub repository</a>, where you also find the latest source code.  I am also open contributions and collaborations of any kind.</p>
+<p>The goal of this package is to provide a standardized and unified API for using futures in R.  What you are seeing right now is an early but sincere attempt to achieve this goal.  If you have comments or ideas how to improve the &#39;future&#39; package, I would love to hear about it.  The preferred way to get in touch is via the <a href="https://github.com/HenrikBengtsson/future/">GitHub repository</a>, where you also find the latest source code.  I am also open to contributions and collaborations of any kind.</p>
 
 <hr/>
 
