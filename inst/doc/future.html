@@ -284,7 +284,7 @@ To get the future of a future variable, use the <code>futureOf()</code> function
 
 <p>This shows that <code>a</code> in the calling environment is unaffected by the expression evaluated by the future.</p>
 
-<p>If needed, it is possible to evaluate both lazy and eager futures in the calling environment (but then global variables cannot be &ldquo;frozen&rdquo;).  For instance,</p>
+<p>If needed (but not recommended), it is possible to evaluate both lazy and eager futures in the calling environment (but then global variables cannot be &ldquo;frozen&rdquo;).  For instance,</p>
 
 <pre><code class="r">&gt; plan(lazy, local=FALSE, globals=FALSE)
 &gt; a &lt;- 2.71
@@ -431,7 +431,11 @@ Error in eval(expr, envir, enclos) : Whoops!
 
 <h2>Globals</h2>
 
-<p>The &#39;future&#39; package does not provide mechanisms for controlling how global variables and functions (&ldquo;globals&rdquo;) are resolved.  Instead, this important task is passed on to the mechanism that evaluates the future expressions(*).  For instance, concurrent evaluation on compute clusters requires that globals are properly identified and exported to each compute node.  Having said this, the <code>lazy()</code> function, which implements lazy futures, does indeed look for globals and &ldquo;freezes&rdquo; them at the time point when the future is created.  This assures that the result of a lazy future will be the same regardless of when it is resolved, e.g. before or after globals change.  Since eager futures are resolved upon creation, any globals will also be resolved at this time and therefore there is no need for the <code>eager()</code> function to handle globals specifically.  If you wish to implement your own future mechanism, you might find it useful to see how <code>lazy()</code> deals with globals (which is done with help of the &#39;<a href="http://cran.r-project.org/package=globals">globals</a>&#39; package).  Due to how multicore processing is done, globals are also automatically taken care of when you are using multicore futures.</p>
+<p>The &#39;future&#39; package does not provide mechanisms for controlling how global variables and functions (&ldquo;globals&rdquo;) are resolved.  Instead, this important task is passed on to the mechanism that evaluates the future expressions(*).  For instance, concurrent evaluation on compute clusters requires that globals are properly identified and exported to each compute node.</p>
+
+<p>Having said this, the <code>lazy()</code> function, which implements lazy futures, does indeed look for globals and &ldquo;freezes&rdquo; them at the time point when the future is created.  This assures that the result of a lazy future will be the same regardless of when it is resolved, e.g. before or after globals change.  Since eager futures are resolved upon creation, any globals will also be resolved at this time and therefore there is no need for the <code>eager()</code> function to handle globals specifically.  Similarly, because multicore processing is done via forks, globals are also automatically taken care of when you are using multicore futures.</p>
+
+<p>Furthermore, in order to provide a more consistent behavior across different types of futures, both eager and multicore futures can be setup to validate global variables at the point in time when the future is created by specifying <code>globals=TRUE</code>, i.e. <code>plan(eager, globals=TRUE)</code> and <code>plan(multicore, globals=TRUE)</code>.  This will give early informative error messages on missing globals (similarly to how it works for lazy futures).  If you wish to implement your own future mechanism, you might find it useful to see how <code>lazy()</code> deals with globals (which is done with help of the &#39;<a href="http://cran.r-project.org/package=globals">globals</a>&#39; package).</p>
 
 <p><em>Footnote</em>: (*) The task of identifying globals is a challenging problem and with asynchronous/concurrent/parallel evaluation there will always be corner cases that will not work as intended (and figuring out why can sometimes be tricky, even when troubleshooting using lazy futures).  The purpose of the &#39;<a href="http://cran.r-project.org/package=globals">globals</a>&#39; package is to try to standardize how globals are identified into one or a small number of robust strategies.  Until such a standard has been identified and implemented, the &#39;future&#39; package will not attempt to provide other packages implementing futures with an automatic service for dealing with globals.  This may change in the future (yes, this pun was also intended).</p>
 
@@ -444,7 +448,7 @@ plan(eager)
 demo(&quot;mandelbrot&quot;, package=&quot;future&quot;, ask=FALSE)
 </code></pre>
 
-<p>which closely immitates how the script would run if futures were not used.  Then try the same using lazy evaluation,</p>
+<p>which closely imitates how the script would run if futures were not used.  Then try the same using lazy evaluation,</p>
 
 <pre><code class="r">plan(lazy)
 demo(&quot;mandelbrot&quot;, package=&quot;future&quot;, ask=FALSE)
