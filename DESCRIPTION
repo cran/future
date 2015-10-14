@@ -1,7 +1,7 @@
 Package: future
-Version: 0.8.1
+Version: 0.8.2
 Title: A Future API for R
-Imports: listenv, globals (>= 0.4.0)
+Imports: listenv, globals (>= 0.4.1)
 Suggests: parallel, R.rsp
 VignetteBuilder: R.rsp
 Authors@R: c(person("Henrik", "Bengtsson", role=c("aut", "cre", "cph"),
@@ -12,8 +12,8 @@ LazyLoad: TRUE
 URL: https://github.com/HenrikBengtsson/future
 BugReports: https://github.com/HenrikBengtsson/future/issues
 NeedsCompilation: no
-Packaged: 2015-10-05 20:18:31 UTC; hb
+Packaged: 2015-10-14 20:24:15 UTC; hb
 Author: Henrik Bengtsson [aut, cre, cph]
 Maintainer: Henrik Bengtsson <henrikb@braju.com>
 Repository: CRAN
-Date/Publication: 2015-10-05 23:01:32
+Date/Publication: 2015-10-14 23:41:29
