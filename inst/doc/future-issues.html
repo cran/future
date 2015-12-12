@@ -206,7 +206,7 @@ hr {
 
 <p>In the ideal case all it takes to start using futures in R is to replace any standard assignment (<code>&lt;-</code>) in your R code with a future assignment (<code>%&lt;=%</code>) and make sure your right-hand side (RHS) expression is within curly brackets (<code>{ ... }</code>).  Also, if you assign these to lists (e.g. in a for loop), you need to use a list environment (<code>listenv</code>) instead of a plain list.</p>
 
-<p>However, there are few cases where you have to take extra precautions.  These are often related to how global variables are false identified in non-standard evaluation, e.g. <code>subset(data, x &lt; 3)</code>.  Global variables need to be identified when futures are created, but this is a particularly hard task when non-standard evaluation is involved.</p>
+<p>However, there are few cases where you have to take extra precautions.  These are often related to how global variables are falsely identified in non-standard evaluation, e.g. <code>subset(data, x &lt; 3)</code>.  Global variables need to be identified when futures are created, but this is a particularly hard task when non-standard evaluation is involved.</p>
 
 <p><em>If you identify other use cases, please consider <a href="https://github.com/HenrikBengtsson/future/issues/">reporting</a> them so they can be documented here and possibly even be fixed.</em></p>
 
@@ -244,7 +244,7 @@ The same error would be reported when using <code>plan(eager, globals=TRUE)</cod
 [1] 1 2
 </code></pre>
 
-<p>An alternative is to use a dummy variable.  In contrast to the code-inspection algorithm used to identify globals, <em>we know from reading the documentation</em> that <code>subset()</code> will look for <code>x</code> in the <code>data</code> object, not in the parent environments.  Armed with this knowledge, we can trick the <a href="http://cran.r-project.org/package=future">future</a> package (more precisely the <a href="http://cran.r-project.org/package=globals">globals</a> package) to pickup a dummy variable <code>x</code> instead, e.g.</p>
+<p>An alternative is to use a dummy variable.  In contrast to the code-inspection algorithm used to identify globals, <em>we know from reading the documentation</em> that <code>subset()</code> will look for <code>x</code> in the <code>data</code> object, not in the parent environments.  Armed with this knowledge, we can trick the <a href="https://cran.r-project.org/package=future">future</a> package (more precisely the <a href="https://cran.r-project.org/package=globals">globals</a> package) to pickup a dummy variable <code>x</code> instead, e.g.</p>
 
 <pre><code class="r">&gt; data &lt;- data.frame(x=1:5, y=1:5)
 &gt; x &lt;- NULL ## To please future et al.
@@ -281,7 +281,8 @@ Error in globalsOf(expr, envir = envir, tweak = tweakExpression, dotdotdot = &qu
 &gt; p
 </code></pre>
 
-<p>Another one, is to explicitly specify <code>mtcars$wt</code> and <code>mtcars$mpg</code>, which may become a bit tedious.  A third alternative is to make use of dummy variables <code>wt</code> and <code>mpg</code>, i.e.</p>
+<p>Another one, is to explicitly specify <code>mtcars$wt</code> and <code>mtcars$mpg</code>, which may become a bit tedious.
+A third alternative is to make use of dummy variables <code>wt</code> and <code>mpg</code>, i.e.</p>
 
 <pre><code class="r">&gt; p %&lt;=% {
 +   wt &lt;- mpg &lt;- NULL
@@ -294,41 +295,50 @@ Error in globalsOf(expr, envir = envir, tweak = tweakExpression, dotdotdot = &qu
 
 <h2>Missing or incorrect globals</h2>
 
-<h3>Global variables has the same name as a local one</h3>
+<h2>Global variable obscured by subassignment</h2>
 
-<p>In plain R, it is straightforward to understand what value is assigned to <code>x</code>:</p>
-
-<pre><code class="r">&gt; a &lt;- 1
-&gt; x &lt;- { y &lt;- 2*a; a &lt;- 2; a*y }
-&gt; rm(a)
-&gt; x
-[1] 4
-</code></pre>
-
-<p>If we analogously use a future assignment, we instead get:</p>
+<p>When a global variable is a vector, a matrix, a list, a data frame, an environment, or any other type of object that can be assigned via subsetting, the global package fails to identify it as a global variable if its first occurance in the future expression is as part of a subsetting assignment.
+For example,</p>
 
 <pre><code class="r">&gt; library(future)
 &gt; plan(lazy)
-&gt; a &lt;- 1
-&gt; x %&lt;=% { y &lt;- 2*a; a &lt;- 2; a*y }
-&gt; rm(a)
-&gt; x
-Error in eval(expr, envir, enclos) : object &#39;a&#39; not found
+&gt; x &lt;- matrix(1:12, nrow=3, ncol=4)
+&gt; y %&lt;=% {
++   x[1,1] &lt;- 3
++   42
++ }
+&gt; rm(x)
+&gt; y
+Error in x[1, 1] &lt;- 3 : object &#39;x&#39; not found
 </code></pre>
 
-<p>(For lazy futures it can even be worse because if we don&#39;t remove <code>a</code> but instead reassign it, say, <code>a &lt;- 3</code>, we will get an incorrect value <code>x == 6</code>, because <code>y &lt;- a</code> is resolved at the time when the lazy future is resolved.)</p>
-
-<p>The reason for this problem is that the static code inspection fails to identify that the first occurrence of <code>a</code> is a global variable whereas the second occurrence creates a local variable with the same name.  The latter &ldquo;hides&rdquo; the former so it fails to be identified.  This is a limitation of the <a href="http://cran.r-project.org/package=globals">globals</a> and [codetools] packages.  In order to avoid this problem, it useful to understand that from the code inspector&#39;s point of view the order of expressions within futures makes no difference, that is, <code>y &lt;- 2*a; a &lt;- 2</code> and <code>a &lt;- 2; y &lt;- 2*a</code> are identical when it comes to identifying globals.</p>
-
-<p>The solution to this problem to avoid using local variables with the same name as global ones.  For example,</p>
+<p>Another example is</p>
 
 <pre><code class="r">&gt; library(future)
 &gt; plan(lazy)
-&gt; a &lt;- 1
-&gt; x %&lt;=% { y &lt;- 2*a; b &lt;- 2; b*y }
-&gt; rm(a)
-&gt; x
-[1] 4
+&gt; x &lt;- list(a=1, b=2)
+&gt; y %&lt;=% {
++   x$c &lt;- 3
++   42
++ }
+&gt; rm(x)
+&gt; y
+Error in x$c &lt;- 3 : object &#39;x&#39; not found
+</code></pre>
+
+<p>A workaround is to explicitly tell the future package about the global variable by simply listing it at the beginning of the expression, e.g.</p>
+
+<pre><code class="r">&gt; library(future)
+&gt; plan(lazy)
+&gt; x &lt;- list(a=1, b=2)
+&gt; y %&lt;=% {
++   x  ## Force &#39;x&#39; to be global
++   x$c &lt;- 3
++   42
++ }
+&gt; rm(x)
+&gt; y
+[1] 42
 </code></pre>
 
 <h2>Error &ldquo;non-numeric argument to binary operator&rdquo;</h2>

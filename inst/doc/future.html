@@ -253,7 +253,7 @@ Resolving...
 
 <h3>Promises of successful futures</h3>
 
-<p>An important part of a future is the fact that, although we do not necessarily control <em>when</em> a future is resolved, we do have a &ldquo;promise&rdquo; that it <em>will</em> be resolved (at least if its value is requested).  In other words, if we ask for the value of a future, we are guaranteed that the expression of the future will be evaluated and its value will be returned to us (or an error will be generated if the evaluation caused an error).  An alternative to a <code>future-value</code> pair of function calls is to use the <code>%&lt;=%</code> infix assignment operator (also provided by the &#39;future&#39; package).  For example,</p>
+<p>An important part of a future is the fact that, although we do not necessarily control <em>when</em> a future is resolved, we do have a &ldquo;promise&rdquo; that it <em>will</em> be resolved (at least if its value is requested).  In other words, if we ask for the value of a future, we are guaranteed that the expression of the future will be evaluated and its value will be returned to us (or an error will be generated if the evaluation caused an error).  An alternative to a future-value pair of function calls is to use the <code>%&lt;=%</code> infix assignment operator (also provided by the &#39;future&#39; package).  For example,</p>
 
 <pre><code class="r">&gt; plan(lazy)
 &gt; v %&lt;=% {
@@ -270,7 +270,7 @@ To get the future of a future variable, use the <code>futureOf()</code> function
 
 <h3>Eager, lazy and parallel futures</h3>
 
-<p>You are responsible for your own futures and how you choose to resolve them may differ depending on your needs and your resources.  The &#39;future&#39; package provides two <em>synchronous</em> futures, namely &ldquo;lazy&rdquo; and &ldquo;eager&rdquo;, implemented by functions <code>lazy()</code> and <code>eager()</code>.  It also provides one <em>asynchronous</em> future, the &ldquo;multicore&rdquo; future, implemented by function <code>multicore()</code>.  The latter is available on systems where R supports multicore processing, that is, on Unix-like operating systems, but not on Windows.  On non-supported systems, multicore futures automatically becomes eager futures.</p>
+<p>You are responsible for your own futures and how you choose to resolve them may differ depending on your needs and your resources.  The &#39;future&#39; package provides two <em>synchronous</em> futures, the &ldquo;lazy&rdquo; and &ldquo;eager&rdquo; futures, implemented by functions <code>lazy()</code> and <code>eager()</code>.  It also provides one <em>asynchronous</em> future, the &ldquo;multicore&rdquo; future, implemented by function <code>multicore()</code>.  The latter is available on systems where R supports multicore processing, that is, on Unix-like operating systems, but not on Windows.  On non-supported systems, multicore futures automatically becomes eager futures.</p>
 
 <p>Since an asynchronous strategy is more likely to be used in practice, the built-in eager and lazy mechanisms try to emulate those as far as possible while at the same time evaluating them in a synchronous way.  For example, the default is that the future expression is evaluated in <em>a local environment</em> (cf. <code>help(&quot;local&quot;)</code>), which means that any assignments are done to local variables only - such that the environment of the main/calling process is unaffected.  Here is an example:</p>
 
@@ -400,10 +400,12 @@ $c
 
 <pre><code class="r">&gt; plan(lazy)
 &gt; f &lt;- future({
++   message(&quot;Resolving...&quot;)
 +   stop(&quot;Whoops!&quot;)
 +   42
 + })
 &gt; value(f)
+Resolving...
 Error in eval(expr, envir, enclos) : Whoops!
 </code></pre>
 
@@ -413,20 +415,26 @@ Error in eval(expr, envir, enclos) : Whoops!
 Error in eval(expr, envir, enclos) : Whoops!
 </code></pre>
 
+<p>Note how the future expression is only evaluated once although the error itself is re-thrown each time the value is required subsequently.</p>
+
 <p>Exception handling of future assignments via <code>%&lt;=%</code> works analogously, e.g.</p>
 
 <pre><code class="r">&gt; plan(lazy)
-&gt; x %&lt;=% ({
-+   stop(&quot;Whoops!&quot;)
-+   42
-+ })
+ x %&lt;=% ({
+   message(&quot;Resolving...&quot;)
+   stop(&quot;Whoops!&quot;)
+   42
+ })
 &gt; y &lt;- 3.14
 &gt; y
 [1] 3.14
 &gt; x
+Resolving...
 Error in eval(expr, envir, enclos) : Whoops!
 &gt; x
 Error in eval(expr, envir, enclos) : Whoops!
+In addition: Warning message:
+restarting interrupted promise evaluation
 </code></pre>
 
 <h2>Globals</h2>
@@ -466,7 +474,7 @@ demo(&quot;mandelbrot&quot;, package=&quot;future&quot;, ask=FALSE)
 
 <h2>Contributing</h2>
 
-<p>The goal of this package is to provide a standardized and unified API for using futures in R.  What you are seeing right now is an early but sincere attempt to achieve this goal.  If you have comments or ideas how to improve the &#39;future&#39; package, I would love to hear about it.  The preferred way to get in touch is via the <a href="https://github.com/HenrikBengtsson/future/">GitHub repository</a>, where you also find the latest source code.  I am also open to contributions and collaborations of any kind.</p>
+<p>The goal of this package is to provide a standardized and unified API for using futures in R.  What you are seeing right now is an early but sincere attempt to achieve this goal.  If you have comments or ideas on how to improve the &#39;future&#39; package, I would love to hear about them.  The preferred way to get in touch is via the <a href="https://github.com/HenrikBengtsson/future/">GitHub repository</a>, where you also find the latest source code.  I am also open to contributions and collaborations of any kind.</p>
 
 <hr/>
 
