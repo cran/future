@@ -295,7 +295,7 @@ A third alternative is to make use of dummy variables <code>wt</code> and <code>
 
 <h2>Missing or incorrect globals</h2>
 
-<h2>Global variable obscured by subassignment</h2>
+<h3>Global variable obscured by subassignment</h3>
 
 <p>When a global variable is a vector, a matrix, a list, a data frame, an environment, or any other type of object that can be assigned via subsetting, the global package fails to identify it as a global variable if its first occurance in the future expression is as part of a subsetting assignment.
 For example,</p>
@@ -339,6 +339,34 @@ Error in x$c &lt;- 3 : object &#39;x&#39; not found
 &gt; rm(x)
 &gt; y
 [1] 42
+</code></pre>
+
+<h3>do.call() - function not found</h3>
+
+<p>When calling a function using <code>do.call()</code> make sure to specify the function as the object itself and not by name.  This will help identify the function as a global object in the future expression.  For instance, use</p>
+
+<pre><code class="r">do.call(file_ext, list(&quot;foo.txt&quot;))
+</code></pre>
+
+<p>instead of</p>
+
+<pre><code class="r">do.call(&quot;file_ext&quot;, list(&quot;foo.txt&quot;))
+</code></pre>
+
+<p>so that <code>file_ext()</code> is properly located and exported.  Although you may not notice a difference when evaluating futures in the same R session, it may become a problem when futures are evaluated in external R sessions, such as on a cluster.  It may also become a problem if there is another function with the same name.  Example illustrating the problem:</p>
+
+<pre><code class="r">&gt; library(&quot;future&quot;)
+&gt; library(&quot;listenv&quot;)
+&gt; library(&quot;tools&quot;)
+&gt; plan(lazy)
+&gt; pathnames &lt;- c(&quot;foo.txt&quot;, &quot;bar.png&quot;, &quot;yoo.md&quot;)
+&gt; res &lt;- listenv()
+&gt; for (ii in seq_along(pathnames)) {
++   res[[ii]] %&lt;=% do.call(&quot;file_ext&quot;, list(pathnames[ii]))
++ }
+&gt; file_ext &lt;- function(...) &quot;haha!&quot;
+&gt; unlist(res)
+[1] &quot;haha!&quot; &quot;haha!&quot; &quot;haha!&quot;
 </code></pre>
 
 <h2>Error &ldquo;non-numeric argument to binary operator&rdquo;</h2>
