@@ -225,7 +225,6 @@ hr {
 <p>From a static code inspection point of view, the expression <code>x &lt; 3</code> asks for variable <code>x</code> to be compared to 3, and there is nothing specifying that <code>x</code> is part of <code>data</code> and not the global environment.  That <code>x</code> is indeed part of the <code>data</code> object can only safely be inferred at run time when <code>subset()</code> is called.  This is not a problem in the above snipped, but when using futures all global/unknown variables need to be captured when the future is created (it is too late to do it when the future is resolved), e.g.</p>
 
 <pre><code class="r">&gt; library(future)
-&gt; plan(lazy)
 &gt; data &lt;- data.frame(x=1:5, y=1:5)
 &gt; v %&lt;=% subset(data, x &lt; 3)$y
 Error in globalsOf(expr, envir = envir, tweak = tweakExpression, dotdotdot = &quot;return&quot;,  :
@@ -265,7 +264,6 @@ The same error would be reported when using <code>plan(eager, globals=TRUE)</cod
 <p>fields <code>mpg</code> and <code>wt</code> of the <code>mtcars</code> data object are plotted against each other.  That <code>mpg</code> and <code>wt</code> are actually fields of <code>mtcars</code> can not be inferred from code inspection alone, but you need know that that is how ggplot2 works.  Analogously to the above <code>subset()</code> example, this explains why we get the following error:</p>
 
 <pre><code class="r">&gt; library(future)
-&gt; plan(lazy)
 &gt; library(ggplot2)
 &gt; p %&lt;=% { ggplot(mtcars, aes(wt, mpg)) + geom_point() }
 Error in globalsOf(expr, envir = envir, tweak = tweakExpression, dotdotdot = &quot;return&quot;,  :
@@ -297,11 +295,10 @@ A third alternative is to make use of dummy variables <code>wt</code> and <code>
 
 <h3>Global variable obscured by subassignment</h3>
 
-<p>When a global variable is a vector, a matrix, a list, a data frame, an environment, or any other type of object that can be assigned via subsetting, the global package fails to identify it as a global variable if its first occurance in the future expression is as part of a subsetting assignment.
+<p>When a global variable is a vector, a matrix, a list, a data frame, an environment, or any other type of object that can be assigned via subsetting, the global package fails to identify it as a global variable if its first occurrence in the future expression is as part of a subsetting assignment.
 For example,</p>
 
 <pre><code class="r">&gt; library(future)
-&gt; plan(lazy)
 &gt; x &lt;- matrix(1:12, nrow=3, ncol=4)
 &gt; y %&lt;=% {
 +   x[1,1] &lt;- 3
@@ -315,7 +312,6 @@ Error in x[1, 1] &lt;- 3 : object &#39;x&#39; not found
 <p>Another example is</p>
 
 <pre><code class="r">&gt; library(future)
-&gt; plan(lazy)
 &gt; x &lt;- list(a=1, b=2)
 &gt; y %&lt;=% {
 +   x$c &lt;- 3
@@ -329,7 +325,6 @@ Error in x$c &lt;- 3 : object &#39;x&#39; not found
 <p>A workaround is to explicitly tell the future package about the global variable by simply listing it at the beginning of the expression, e.g.</p>
 
 <pre><code class="r">&gt; library(future)
-&gt; plan(lazy)
 &gt; x &lt;- list(a=1, b=2)
 &gt; y %&lt;=% {
 +   x  ## Force &#39;x&#39; to be global
@@ -353,7 +348,8 @@ Error in x$c &lt;- 3 : object &#39;x&#39; not found
 <pre><code class="r">do.call(&quot;file_ext&quot;, list(&quot;foo.txt&quot;))
 </code></pre>
 
-<p>so that <code>file_ext()</code> is properly located and exported.  Although you may not notice a difference when evaluating futures in the same R session, it may become a problem when futures are evaluated in external R sessions, such as on a cluster.  It may also become a problem if there is another function with the same name.  Example illustrating the problem:</p>
+<p>so that <code>file_ext()</code> is properly located and exported.  Although you may not notice a difference when evaluating futures in the same R session, it may become a problem when futures are evaluated in external R sessions, such as on a cluster.
+It may also become a problem with lazy futures an the intended function is redefined after the future is resolved.  For example,</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
 &gt; library(&quot;listenv&quot;)
