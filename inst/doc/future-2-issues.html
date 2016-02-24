@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
-<title>Futures in R: Common issues with solutions</title>
+<title>A Future for R: Common Issues with Solutions</title>
 
 <script type="text/javascript">
 window.onload = function() {
@@ -202,17 +202,19 @@ hr {
 </head>
 
 <body>
-<h1>Futures in R: Common issues with solutions</h1>
+<h1>A Future for R: Common Issues with Solutions</h1>
 
-<p>In the ideal case all it takes to start using futures in R is to replace any standard assignment (<code>&lt;-</code>) in your R code with a future assignment (<code>%&lt;=%</code>) and make sure your right-hand side (RHS) expression is within curly brackets (<code>{ ... }</code>).  Also, if you assign these to lists (e.g. in a for loop), you need to use a list environment (<code>listenv</code>) instead of a plain list.</p>
+<p>In the ideal case all it takes to start using futures in R is to replace select standard assignments (<code>&lt;-</code>) in your R code with future assignments (<code>%&lt;=%</code>) and make sure the right-hand side (RHS) expressions are within curly brackets (<code>{ ... }</code>).  Also, if you assign these to lists (e.g. in a for loop), you need to use a list environment (<code>listenv</code>) instead of a plain list.</p>
 
 <p>However, there are few cases where you have to take extra precautions.  These are often related to how global variables are falsely identified in non-standard evaluation, e.g. <code>subset(data, x &lt; 3)</code>.  Global variables need to be identified when futures are created, but this is a particularly hard task when non-standard evaluation is involved.</p>
 
 <p><em>If you identify other use cases, please consider <a href="https://github.com/HenrikBengtsson/future/issues/">reporting</a> them so they can be documented here and possibly even be fixed.</em></p>
 
-<h2>False globals due to non-standard evaluation</h2>
+<h2>Issues with globals</h2>
 
-<h3>subset(data, x &lt; 3)</h3>
+<h3>False globals due to non-standard evaluation</h3>
+
+<h4>subset(data, x &lt; 3)</h4>
 
 <p>Consider the following use of <code>subset()</code>:</p>
 
@@ -232,8 +234,7 @@ Error in globalsOf(expr, envir = envir, tweak = tweakExpression, dotdotdot = &qu
   object in the relevant environments: &#39;x&#39;
 </code></pre>
 
-<p>Above, code inspection of the future expression <code>subset(data, x &lt; 3)$y</code> incorrectly identifies <code>x</code> as a global variables that needs to be captured (&ldquo;frozen&rdquo;) for the (lazy) future.  Since no such variable <code>x</code> exists, we get an error.
-The same error would be reported when using <code>plan(eager, globals=TRUE)</code> or <code>plan(multicore, globals=TRUE)</code>, which validates globals <em>before</em> the future is created.</p>
+<p>Above, code inspection of the future expression <code>subset(data, x &lt; 3)$y</code> incorrectly identifies <code>x</code> as a global variables that needs to be captured (&ldquo;frozen&rdquo;) for the (lazy) future.  Since no such variable <code>x</code> exists, we get an error.</p>
 
 <p>The most clear and backward-compatible solution to this problem is to explicitly specify the context of <code>x</code>, i.e.</p>
 
@@ -252,7 +253,7 @@ The same error would be reported when using <code>plan(eager, globals=TRUE)</cod
 [1] 1 2
 </code></pre>
 
-<h3>ggplot2</h3>
+<h4>ggplot2</h4>
 
 <p>Another common use case for non-standard evaluation is when creating ggplot2 figures.  For instance, in</p>
 
@@ -291,9 +292,9 @@ A third alternative is to make use of dummy variables <code>wt</code> and <code>
 
 <p>By the way, since all futures are evaluated in a local environment, the dummy variables are <em>not</em> assigned to the calling environment.</p>
 
-<h2>Missing or incorrect globals</h2>
+<h3>Missing or incorrect globals</h3>
 
-<h3>Global variable obscured by subassignment</h3>
+<h4>Global variable obscured by subassignment</h4>
 
 <p>When a global variable is a vector, a matrix, a list, a data frame, an environment, or any other type of object that can be assigned via subsetting, the global package fails to identify it as a global variable if its first occurrence in the future expression is as part of a subsetting assignment.
 For example,</p>
@@ -348,7 +349,7 @@ Error in x$c &lt;- 3 : object &#39;x&#39; not found
 <pre><code class="r">do.call(&quot;file_ext&quot;, list(&quot;foo.txt&quot;))
 </code></pre>
 
-<p>so that <code>file_ext()</code> is properly located and exported.  Although you may not notice a difference when evaluating futures in the same R session, it may become a problem when futures are evaluated in external R sessions, such as on a cluster.
+<p>so that <code>file_ext()</code> is properly located and exported.  Although you may not notice a difference when evaluating futures in the same R session, it may become a problem if you use a character string instead of a function object when futures are evaluated in external R sessions, such as on a cluster.
 It may also become a problem with lazy futures an the intended function is redefined after the future is resolved.  For example,</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
@@ -365,7 +366,73 @@ It may also become a problem with lazy futures an the intended function is redef
 [1] &quot;haha!&quot; &quot;haha!&quot; &quot;haha!&quot;
 </code></pre>
 
-<h2>Error &ldquo;non-numeric argument to binary operator&rdquo;</h2>
+<h3>Trying to pass an unresolve future to another future</h3>
+
+<p>It is not possible for a future to resolve another one unless it was created by the future trying to resolve it.  For instance, the following gives an error:</p>
+
+<pre><code class="r">&gt; library(&quot;future&quot;)
+&gt; plan(multisession, maxCores=3L)
+&gt; f1 &lt;- future({ Sys.getpid() })
+&gt; f2 &lt;- future({ value(f1) })
+&gt; v1 &lt;- value(f1)
+[1] 7464
+&gt; v2 &lt;- value(f2)
+Error: Invalid usage of futures: A future whose value has not yet been collected
+ can only be queried by the R process (cdd013cb-e045-f4a5-3977-9f064c31f188; pid
+ 1276 on MyMachine) that created it, not by any other R processes (5579f789-e7b6
+ -bace-c50d-6c7a23ddb5a3; pid 2352 on MyMachine): {; Sys.getpid(); }
+</code></pre>
+
+<p>This is because the main R process creates two futures, but then the second future tries to retrieve the value of the first one.  This is an invalid request because the second future has no channel to communicate with the first future; it is only the process that created a future who can communicate with it(*).</p>
+
+<p>Note that it is only <em>unresolved</em> futures that cannot be queried this way.  Thus, the solution to the above problem is to make sure all futures are resolved before they are passed to other futures, e.g.</p>
+
+<pre><code class="r">&gt; f1 &lt;- future({ Sys.getpid() })
+&gt; v1 &lt;- value(f1)
+&gt; v1
+[1] 7464
+&gt; f2 &lt;- future({ value(f1) })
+&gt; v2 &lt;- value(f2)
+&gt; v2
+[1] 7464
+</code></pre>
+
+<p>This works because the value has already been collected and stored inside future <code>f1</code> before future <code>f2</code> is created.  Since the value is already stored internally, <code>value(f1)</code> is readily available everywhere.  Of course, instead of using <code>value(f1)</code> for the second future, it would be more readable and cleaner to simply use <code>v1</code>.</p>
+
+<p>The above is typically not a problem when future assignments are used.  For example:</p>
+
+<pre><code class="r">&gt; v1 %&lt;=% { Sys.getpid() })
+&gt; v2 %&lt;=% { v1 }
+&gt; v1
+[1] 2352
+&gt; v2
+[1] 2352
+</code></pre>
+
+<p>The reason that this approach works out of the box is because in the second future assignment <code>v1</code> is identified as a global variable, which is retrieved.  Up to this point, <code>v1</code> is a promise (&ldquo;delayed assignment&rdquo; in R), but when it is retrieved as a global variable its value is resolved and <code>v1</code> becomes a regular variable.</p>
+
+<p>However, there are cases where future assignments can be passed via global variables without being resolved.  This can happen if the future assignment is done to an element of an environment (including list environments).  For instance,</p>
+
+<pre><code class="r">&gt; library(&quot;listenv&quot;)
+&gt; x &lt;- listenv()
+&gt; x$a %&lt;=% { Sys.getpid() }
+&gt; x$b %&lt;=% { x$a }
+&gt; x$a
+[1] 2352
+&gt; x$b
+Error: Invalid usage of futures: A future whose value has not yet been collected
+ can only be queried by the R process (cdd013cb-e045-f4a5-3977-9f064c31f188; pid
+ 1276 on localhost) that created it, not by any other R processes (2ce86ccd-5854
+ -7a05-1373-e1b20022e4d8; pid 7464 on localhost): {; Sys.getpid(); }
+</code></pre>
+
+<p>As previously, this can be avoided by making sure <code>x$a</code> is resolved first, which can be one in various ways, e.g. <code>dummy &lt;- x$a</code>, <code>resolve(x$a)</code> and <code>force(x$a)</code>.</p>
+
+<p><em>Footnote</em>: (*) Although certain types of futures, such as eager and lazy ones, could be passed on to other futures and be resolved there because they share the same evaluation process, by definition of the Future API it is invalid to do so regardless of future type.  This conservative approach is taken in order to make future expressions behave consistently regardless of type of futures.</p>
+
+<h2>Miscellanous</h2>
+
+<h3>Error &ldquo;non-numeric argument to binary operator&rdquo;</h3>
 
 <p>The future assignment operator <code>%&lt;=%</code> is a <em>binary infix operator</em>, which means it has higher precedence than most other binary operators but also higher than some of the unary operators in R.  For instance, this explains why we get the following error:</p>
 
@@ -384,7 +451,7 @@ Error in x %&lt;=% 2 * runif(1) : non-numeric argument to binary operator
 
 <hr/>
 
-<p>Copyright Henrik Bengtsson, 2015</p>
+<p>Copyright Henrik Bengtsson, 2015-2016</p>
 
 </body>
 

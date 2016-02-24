@@ -1,7 +1,7 @@
 Package: future
-Version: 0.11.0
+Version: 0.12.0
 Title: A Future API for R
-Imports: digest, globals (>= 0.6.0), listenv (>= 0.6.0), parallel
+Imports: digest, globals (>= 0.6.1), listenv (>= 0.6.0), parallel
 Suggests: R.rsp
 VignetteBuilder: R.rsp
 Authors@R: c(person("Henrik", "Bengtsson", role=c("aut", "cre", "cph"),
@@ -20,16 +20,22 @@ Description: A Future API for R is provided. In programming, a future is an
     are accessible by the assigned variables (as promises), e.g.
     'v %<=% { mandelbrot(c(0.28,0), side=2) }'.
     This package implements synchronous "lazy" and "eager" futures, and asynchronous
-    "multicore", "multisession" and ad hoc "cluster" futures.  Additional types of
-    futures are provided by other packages enhancing this package.
+    "multicore", "multisession" and ad hoc "cluster" futures.
+    Globals variables and functions are automatically identified and exported.
+    Required packages are attached in external R sessions whenever needed.
+    All types of futures are designed to behave the same such that the exact
+    same code work regardless of futures used or number of cores, background
+    sessions or cluster nodes available.
+    Additional types of futures are provided by other packages enhancing
+    this package.
 License: LGPL (>= 2.1)
 LazyLoad: TRUE
 URL: https://github.com/HenrikBengtsson/future
 BugReports: https://github.com/HenrikBengtsson/future/issues
 RoxygenNote: 5.0.1
 NeedsCompilation: no
-Packaged: 2016-01-20 06:38:22 UTC; hb
+Packaged: 2016-02-24 02:54:52 UTC; hb
 Author: Henrik Bengtsson [aut, cre, cph]
 Maintainer: Henrik Bengtsson <henrikb@braju.com>
 Repository: CRAN
-Date/Publication: 2016-01-20 09:12:26
+Date/Publication: 2016-02-24 09:11:26
