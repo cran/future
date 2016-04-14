@@ -204,7 +204,7 @@ hr {
 <body>
 <h1>A Future for R: Common Issues with Solutions</h1>
 
-<p>In the ideal case all it takes to start using futures in R is to replace select standard assignments (<code>&lt;-</code>) in your R code with future assignments (<code>%&lt;=%</code>) and make sure the right-hand side (RHS) expressions are within curly brackets (<code>{ ... }</code>).  Also, if you assign these to lists (e.g. in a for loop), you need to use a list environment (<code>listenv</code>) instead of a plain list.</p>
+<p>In the ideal case all it takes to start using futures in R is to replace select standard assignments (<code>&lt;-</code>) in your R code with future assignments (<code>%&lt;-%</code>) and make sure the right-hand side (RHS) expressions are within curly brackets (<code>{ ... }</code>).  Also, if you assign these to lists (e.g. in a for loop), you need to use a list environment (<code>listenv</code>) instead of a plain list.</p>
 
 <p>However, there are few cases where you have to take extra precautions.  These are often related to how global variables are falsely identified in non-standard evaluation, e.g. <code>subset(data, x &lt; 3)</code>.  Global variables need to be identified when futures are created, but this is a particularly hard task when non-standard evaluation is involved.</p>
 
@@ -228,7 +228,7 @@ hr {
 
 <pre><code class="r">&gt; library(future)
 &gt; data &lt;- data.frame(x=1:5, y=1:5)
-&gt; v %&lt;=% subset(data, x &lt; 3)$y
+&gt; v %&lt;-% subset(data, x &lt; 3)$y
 Error in globalsOf(expr, envir = envir, tweak = tweakExpression, dotdotdot = &quot;return&quot;,  :
   Identified a global by static code inspection, but failed to locate the corresponding
   object in the relevant environments: &#39;x&#39;
@@ -239,16 +239,16 @@ Error in globalsOf(expr, envir = envir, tweak = tweakExpression, dotdotdot = &qu
 <p>The most clear and backward-compatible solution to this problem is to explicitly specify the context of <code>x</code>, i.e.</p>
 
 <pre><code class="r">&gt; data &lt;- data.frame(x=1:5, y=1:5)
-&gt; v %&lt;=% subset(data, data$x &lt; 3)$y
+&gt; v %&lt;-% subset(data, data$x &lt; 3)$y
 &gt; v
 [1] 1 2
 </code></pre>
 
-<p>An alternative is to use a dummy variable.  In contrast to the code-inspection algorithm used to identify globals, <em>we know from reading the documentation</em> that <code>subset()</code> will look for <code>x</code> in the <code>data</code> object, not in the parent environments.  Armed with this knowledge, we can trick the <a href="https://cran.r-project.org/package=future">future</a> package (more precisely the <a href="https://cran.r-project.org/package=globals">globals</a> package) to pickup a dummy variable <code>x</code> instead, e.g.</p>
+<p>An alternative is to use a dummy variable.  In contrast to the code-inspection algorithm used to identify globals, <em>we know from reading the documentation</em> that <code>subset()</code> will look for <code>x</code> in the <code>data</code> object, not in the parent environments.  Armed with this knowledge, we can trick the <a href="https://cran.r-project.org/package=future">future</a> package (more precisely the <a href="https://cran.r-project.org/package=globals">globals</a> package) to pick up a dummy variable <code>x</code> instead, e.g.</p>
 
 <pre><code class="r">&gt; data &lt;- data.frame(x=1:5, y=1:5)
 &gt; x &lt;- NULL ## To please future et al.
-&gt; v %&lt;=% subset(data, x &lt; 3)$y
+&gt; v %&lt;-% subset(data, x &lt; 3)$y
 &gt; v
 [1] 1 2
 </code></pre>
@@ -262,28 +262,28 @@ Error in globalsOf(expr, envir = envir, tweak = tweakExpression, dotdotdot = &qu
 &gt; p
 </code></pre>
 
-<p>fields <code>mpg</code> and <code>wt</code> of the <code>mtcars</code> data object are plotted against each other.  That <code>mpg</code> and <code>wt</code> are actually fields of <code>mtcars</code> can not be inferred from code inspection alone, but you need know that that is how ggplot2 works.  Analogously to the above <code>subset()</code> example, this explains why we get the following error:</p>
+<p>fields <code>mpg</code> and <code>wt</code> of the <code>mtcars</code> data object are plotted against each other.  That <code>mpg</code> and <code>wt</code> are fields of <code>mtcars</code> cannot be inferred from code inspection alone, but you need know that that is how ggplot2 works.  Analogously to the above <code>subset()</code> example, this explains why we get the following error:</p>
 
 <pre><code class="r">&gt; library(future)
 &gt; library(ggplot2)
-&gt; p %&lt;=% { ggplot(mtcars, aes(wt, mpg)) + geom_point() }
+&gt; p %&lt;-% { ggplot(mtcars, aes(wt, mpg)) + geom_point() }
 Error in globalsOf(expr, envir = envir, tweak = tweakExpression, dotdotdot = &quot;return&quot;,  :
   Identified a global by static code inspection, but failed to locate the corresponding
   object in the relevant environments: &#39;wt&#39;
 </code></pre>
 
-<p>A few comments are needed here.  First of all, because <code>%&lt;=%</code> has higher precedence than <code>+</code>, we need to place all of the ggplot2 expression within curly brackets, otherwise we get an error.  Second, the reason for only <code>wt</code> being listed as a missing global variable and not <code>mpg</code> is because the latter is (incorrectly) located to be <code>ggplot2::mpg</code>.</p>
+<p>A few comments are needed here.  First of all, because <code>%&lt;-%</code> has higher precedence than <code>+</code>, we need to place all of the ggplot2 expression within curly brackets, otherwise we get an error.  Second, the reason for only <code>wt</code> being listed as a missing global variable and not <code>mpg</code> is because the latter is (incorrectly) located to be <code>ggplot2::mpg</code>.</p>
 
 <p>One workaround is to make use of the <code>*_string()</code> functions of ggplot2, e.g.</p>
 
-<pre><code class="r">&gt; p %&lt;=% { ggplot(mtcars, aes_string(&#39;wt&#39;, &#39;mpg&#39;)) + geom_point() }
+<pre><code class="r">&gt; p %&lt;-% { ggplot(mtcars, aes_string(&#39;wt&#39;, &#39;mpg&#39;)) + geom_point() }
 &gt; p
 </code></pre>
 
 <p>Another one, is to explicitly specify <code>mtcars$wt</code> and <code>mtcars$mpg</code>, which may become a bit tedious.
 A third alternative is to make use of dummy variables <code>wt</code> and <code>mpg</code>, i.e.</p>
 
-<pre><code class="r">&gt; p %&lt;=% {
+<pre><code class="r">&gt; p %&lt;-% {
 +   wt &lt;- mpg &lt;- NULL
 +   ggplot(mtcars, aes(wt, mpg)) + geom_point()
 + }
@@ -301,7 +301,7 @@ For example,</p>
 
 <pre><code class="r">&gt; library(future)
 &gt; x &lt;- matrix(1:12, nrow=3, ncol=4)
-&gt; y %&lt;=% {
+&gt; y %&lt;-% {
 +   x[1,1] &lt;- 3
 +   42
 + }
@@ -314,7 +314,7 @@ Error in x[1, 1] &lt;- 3 : object &#39;x&#39; not found
 
 <pre><code class="r">&gt; library(future)
 &gt; x &lt;- list(a=1, b=2)
-&gt; y %&lt;=% {
+&gt; y %&lt;-% {
 +   x$c &lt;- 3
 +   42
 + }
@@ -327,7 +327,7 @@ Error in x$c &lt;- 3 : object &#39;x&#39; not found
 
 <pre><code class="r">&gt; library(future)
 &gt; x &lt;- list(a=1, b=2)
-&gt; y %&lt;=% {
+&gt; y %&lt;-% {
 +   x  ## Force &#39;x&#39; to be global
 +   x$c &lt;- 3
 +   42
@@ -350,7 +350,7 @@ Error in x$c &lt;- 3 : object &#39;x&#39; not found
 </code></pre>
 
 <p>so that <code>file_ext()</code> is properly located and exported.  Although you may not notice a difference when evaluating futures in the same R session, it may become a problem if you use a character string instead of a function object when futures are evaluated in external R sessions, such as on a cluster.
-It may also become a problem with lazy futures an the intended function is redefined after the future is resolved.  For example,</p>
+It may also become a problem with lazy futures if the intended function is redefined after the future is resolved.  For example,</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
 &gt; library(&quot;listenv&quot;)
@@ -359,19 +359,19 @@ It may also become a problem with lazy futures an the intended function is redef
 &gt; pathnames &lt;- c(&quot;foo.txt&quot;, &quot;bar.png&quot;, &quot;yoo.md&quot;)
 &gt; res &lt;- listenv()
 &gt; for (ii in seq_along(pathnames)) {
-+   res[[ii]] %&lt;=% do.call(&quot;file_ext&quot;, list(pathnames[ii]))
++   res[[ii]] %&lt;-% do.call(&quot;file_ext&quot;, list(pathnames[ii]))
 + }
 &gt; file_ext &lt;- function(...) &quot;haha!&quot;
 &gt; unlist(res)
 [1] &quot;haha!&quot; &quot;haha!&quot; &quot;haha!&quot;
 </code></pre>
 
-<h3>Trying to pass an unresolve future to another future</h3>
+<h3>Trying to pass an unresolved future to another future</h3>
 
 <p>It is not possible for a future to resolve another one unless it was created by the future trying to resolve it.  For instance, the following gives an error:</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
-&gt; plan(multisession, maxCores=3L)
+&gt; plan(multiprocess)
 &gt; f1 &lt;- future({ Sys.getpid() })
 &gt; f2 &lt;- future({ value(f1) })
 &gt; v1 &lt;- value(f1)
@@ -401,8 +401,8 @@ Error: Invalid usage of futures: A future whose value has not yet been collected
 
 <p>The above is typically not a problem when future assignments are used.  For example:</p>
 
-<pre><code class="r">&gt; v1 %&lt;=% { Sys.getpid() })
-&gt; v2 %&lt;=% { v1 }
+<pre><code class="r">&gt; v1 %&lt;-% { Sys.getpid() })
+&gt; v2 %&lt;-% { v1 }
 &gt; v1
 [1] 2352
 &gt; v2
@@ -415,8 +415,8 @@ Error: Invalid usage of futures: A future whose value has not yet been collected
 
 <pre><code class="r">&gt; library(&quot;listenv&quot;)
 &gt; x &lt;- listenv()
-&gt; x$a %&lt;=% { Sys.getpid() }
-&gt; x$b %&lt;=% { x$a }
+&gt; x$a %&lt;-% { Sys.getpid() }
+&gt; x$b %&lt;-% { x$a }
 &gt; x$a
 [1] 2352
 &gt; x$b
@@ -430,19 +430,19 @@ Error: Invalid usage of futures: A future whose value has not yet been collected
 
 <p><em>Footnote</em>: (*) Although certain types of futures, such as eager and lazy ones, could be passed on to other futures and be resolved there because they share the same evaluation process, by definition of the Future API it is invalid to do so regardless of future type.  This conservative approach is taken in order to make future expressions behave consistently regardless of type of futures.</p>
 
-<h2>Miscellanous</h2>
+<h2>Miscellaneous</h2>
 
 <h3>Error &ldquo;non-numeric argument to binary operator&rdquo;</h3>
 
-<p>The future assignment operator <code>%&lt;=%</code> is a <em>binary infix operator</em>, which means it has higher precedence than most other binary operators but also higher than some of the unary operators in R.  For instance, this explains why we get the following error:</p>
+<p>The future assignment operator <code>%&lt;-%</code> is a <em>binary infix operator</em>, which means it has higher precedence than most other binary operators but also higher than some of the unary operators in R.  For instance, this explains why we get the following error:</p>
 
-<pre><code class="r">&gt; x %&lt;=% 2 * runif(1)
-Error in x %&lt;=% 2 * runif(1) : non-numeric argument to binary operator
+<pre><code class="r">&gt; x %&lt;-% 2 * runif(1)
+Error in x %&lt;-% 2 * runif(1) : non-numeric argument to binary operator
 </code></pre>
 
-<p>What effectively is happening here is that because of the higher priority of <code>%&lt;=%</code>, we first create a future <code>x %&lt;=% 2</code> and then we try to multiply it (not its value) with the value of <code>runif(1)</code> - which makes no sense.  In order to properly assign the future variable, we need need to put the future expression within curly brackets;</p>
+<p>What effectively is happening here is that because of the higher priority of <code>%&lt;-%</code>, we first create a future <code>x %&lt;-% 2</code> and then we try to multiply it (not its value) with the value of <code>runif(1)</code> - which makes no sense.  In order to properly assign the future variable, we need to put the future expression within curly brackets;</p>
 
-<pre><code class="r">&gt; x %&lt;=% { 2 * runif(1) }
+<pre><code class="r">&gt; x %&lt;-% { 2 * runif(1) }
 &gt; x
 [1] 1.030209
 </code></pre>
