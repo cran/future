@@ -275,7 +275,7 @@ bams &lt;- as.list(bams)
 
 <p>We could also process the data such that we allocate two cores for processing two samples in parallel each using four cores for processing four chromosomes in parallel:</p>
 
-<pre><code class="r">plan(list(tweak(multiprocess, maxCores=2), tweak(multiprocess, maxCores=4)))
+<pre><code class="r">plan(list(tweak(multiprocess, workers=2), tweak(multiprocess, workers=4)))
 </code></pre>
 
 <h3>An ad-hoc compute cluster</h3>
@@ -284,7 +284,7 @@ bams &lt;- as.list(bams)
 
 <pre><code class="r">nodes &lt;- c(&quot;n1&quot;, &quot;n2&quot;, &quot;n3&quot;)
 cl &lt;- parallel::makeCluster(nodes)
-plan(list(tweak(cluster, cluster=cl), multiprocess))
+plan(list(tweak(cluster, workers=cl), multiprocess))
 </code></pre>
 
 <p><em>Comment:</em> Multiprocess futures are agile to its environment, that is, they will query the machine they are running on to find out how many parallel processes it can run at the same time.</p>
@@ -293,7 +293,7 @@ plan(list(tweak(cluster, cluster=cl), multiprocess))
 
 <pre><code class="r">nodes &lt;- c(&quot;n1&quot;, &quot;n2&quot;, &quot;n3&quot;)
 cl &lt;- parallel::makeCluster(rep(nodes, each=8))
-plan(list(tweak(cluster, cluster=cl), multiprocess))
+plan(list(tweak(cluster, workers=cl), multiprocess))
 </code></pre>
 
 <p>This will cause up to 24 (=3*8) samples to be processed in parallel each processing two chromosomes at the same time.</p>
@@ -309,9 +309,9 @@ library(&quot;listenv&quot;)
 
 ## Set up access cluster login node
 remote &lt;- function(host, homogeneous=FALSE, ...) {
-  myip &lt;- jsonlite::fromJSON(&quot;http://myexternalip.com/json&quot;)$ip
+  myip &lt;- readLines(&quot;http://myexternalip.com/raw&quot;)
   cl &lt;- parallel::makeCluster(host, master=myip, homogeneous=homogeneous, ...)
-  tweak(cluster, cluster=cl, persistent=TRUE)
+  tweak(cluster, workers=cl, persistent=TRUE)
 }
 login &lt;- remote(&quot;login.my-cluster.org&quot;)
 
@@ -322,7 +322,7 @@ nodes %&lt;-% { .keepme &lt;- parallel::makeCluster(c(&quot;n1&quot;, &quot;n2&q
 ## login node -&gt; { cluster nodes } -&gt; { multiple cores }
 plan(list(
   login,
-  tweak(cluster, cluster=nodes),
+  tweak(cluster, workers=nodes),
   multiprocess
 ))
 
