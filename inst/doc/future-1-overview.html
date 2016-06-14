@@ -249,8 +249,8 @@ Resolving...
 [1] 3.14
 </code></pre>
 
-<p>With asynchronous futures the current/main R process does <em>not</em> block, which means it is available for further processing while the futures are being resolved
-in separates processes running in the background.  In other words, futures provide a simply but yet powerful construct for parallel and / or distributed processing in R.</p>
+<p>With asynchronous futures, the current/main R process does <em>not</em> block, which means it is available for further processing while the futures are being resolved
+in separates processes running in the background.  In other words, futures provide a simple but yet powerful construct for parallel and / or distributed processing in R.</p>
 
 <p>Now, if you cannot be bothered to read all the nitty-gritty details about futures, but just want to try them out, then skip to the end to play with the Mandelbrot demo using both parallel and non-parallel evaluation.</p>
 
@@ -263,13 +263,13 @@ in separates processes running in the background.  In other words, futures provi
 +   cat(&quot;Resolving...\n&quot;)
 +   3.14
 + })
-&gt; v &lt;- value(f)
 Resolving...
+&gt; v &lt;- value(f)
 &gt; v
 [1] 3.14
 </code></pre>
 
-<p>Either style of future construct works equally(*) well.  The implicitly style is most similar to how regular R code is written.  In principal all you have to do is to replace <code>&lt;-</code> with a <code>%&lt;-%</code> to turn the assignment into a future assignment.  On the other hand, this simplicity can also be deceiving, particularly when asynchronous futures are being used.  In contrast, the explicit style makes it much clearer that futures are being used, which lowers the risk for mistakes and better communicates the design to others reading your code.</p>
+<p>Either style of future construct works equally(*) well.  The implicit style is most similar to how regular R code is written.  In principle, all you have to do is to replace <code>&lt;-</code> with a <code>%&lt;-%</code> to turn the assignment into a future assignment.  On the other hand, this simplicity can also be deceiving, particularly when asynchronous futures are being used.  In contrast, the explicit style makes it much clearer that futures are being used, which lowers the risk for mistakes and better communicates the design to others reading your code.</p>
 
 <p>(*) There are cases where <code>%&lt;-%</code> cannot be used without some (small) modifications.  We will return to this in Section &#39;Constraints when using Implicit Futures&#39; near the end of this document.</p>
 
@@ -312,7 +312,7 @@ Resolving...
 <tr>
 <td align="left"><code>lazy</code></td>
 <td align="left">all</td>
-<td align="left">lazy evaluation - happens only if value is requested</td>
+<td align="left">lazy evaluation - happens only if the value is requested</td>
 </tr>
 <tr>
 <td align="left"><code>transparent</code></td>
@@ -342,25 +342,30 @@ Resolving...
 <tr>
 <td align="left"><code>cluster</code></td>
 <td align="left">all</td>
-<td align="left">external R sessions on current and/or remote machines</td>
+<td align="left">external R sessions on current, local, and/or remote machines</td>
+</tr>
+<tr>
+<td align="left"><code>remote</code></td>
+<td align="left">all</td>
+<td align="left">Simple access to remote R sessions</td>
 </tr>
 </tbody></table>
 
 <p>The future package is designed such that support for additional strategies can be implemented as well.  For instance, the <a href="https://github.com/HenrikBengtsson/future.BatchJobs">future.BatchJobs</a> package provides futures for all types of <em>cluster functions</em> (&ldquo;backends&rdquo;) that the <a href="http://cran.r-project.org/package=BatchJobs">BatchJobs</a> package supports.  Specifically, futures for evaluating R expressions via job schedulers such as Slurm, TORQUE/PBS, Oracle/Sun Grid Engine (SGE) and Load Sharing Facility (LSF) are also available.</p>
 
-<p>By default, future expressions are evaluated instantaneously and synchronously (in the current R session).  This evaluation strategy is referred to as &ldquo;eager&rdquo; and we refer to futures using this strategy as &ldquo;eager futures&rdquo;.  In this section we will go through each of these strategies and discuss what they have in common and how they differ.</p>
+<p>By default, future expressions are evaluated instantaneously and synchronously (in the current R session).  This evaluation strategy is referred to as &ldquo;eager&rdquo; and we refer to futures using this strategy as &ldquo;eager futures&rdquo;.  In this section, we will go through each of these strategies and discuss what they have in common and how they differ.</p>
 
 <h3>Consistent Behavior Across Futures</h3>
 
-<p>Before going through each of the different future strategies, it is probably helpful to clarify the objectives the Future API (as defined by the future package).  When programming with futures, it should not really matter what future strategy is used for executing code.  This is because we cannot really know what computational resources the user has access to so the choice of evaluation strategy should be in the hand of the user and not the developer.  In other words, the code should not make any assumptions on type of futures, e.g. synchronous or asynchronous.</p>
+<p>Before going through each of the different future strategies, it is probably helpful to clarify the objectives the Future API (as defined by the future package).  When programming with futures, it should not really matter what future strategy is used for executing code.  This is because we cannot really know what computational resources the user has access to so the choice of evaluation strategy should be in the hand of the user and not the developer.  In other words, the code should not make any assumptions on the type of futures used, e.g. synchronous or asynchronous.</p>
 
-<p>One of the designs of the Future API was to encapsulate any differences such that all types of futures will appear to work the same.  This despite expressions may be evaluated locally in the current R process or across the world in remote R sessions.  Another obvious advantage of having a consistent API and behavior among different types of futures is that it helps prototyping.  Typically one would use eager evaluation while building up a script and later, when the script is fully, one may turn on asynchronous processing.</p>
+<p>One of the designs of the Future API was to encapsulate any differences such that all types of futures will appear to work the same.  This despite expressions may be evaluated locally in the current R process or across the world in remote R sessions.  Another obvious advantage of having a consistent API and behavior among different types of futures is that it helps while prototyping.  Typically one would use eager evaluation while building up a script and later, when the script is fully developed, one may turn on asynchronous processing.</p>
 
-<p>Because of this, the defaults of of the different strategies are such that the results and side effects of evaluating a future expression are as similar as possible.  More specifically, the following is true for all futures:</p>
+<p>Because of this, the defaults of the different strategies are such that the results and side effects of evaluating a future expression are as similar as possible.  More specifically, the following is true for all futures:</p>
 
 <ul>
 <li><p>All <em>evaluation is done in a local environment</em> (i.e. <code>local({ expr })</code>) such assignments do not affect the calling environment.  This is natural when evaluating in an external R process, but is also enforced when evaluating in the current R session.</p></li>
-<li><p>When a future is constructed, <em>global variables are identified and validated</em>.  For lazy evaluation, the globals are also &ldquo;frozen&rdquo; (cloned to a local environment) until needed.  For asynchronous evaluation, they are also exported to the R process/session that will be evaluating the future expression.  Regardless of strategy, globals that cannot be located will generate an error with an informative message.  Also, in order to protect against exporting too large objects by mistake, there is also a built in assertion that the total size of all globals is less than a given threshold (controllable via an option).  If the threshold is exceeded, an informative error is thrown.</p></li>
+<li><p>When a future is constructed, <em>global variables are identified and validated</em>.  For lazy evaluation, the globals are also &ldquo;frozen&rdquo; (cloned to a local environment) until needed.  For asynchronous evaluation, they are also exported to the R process/session that will be evaluating the future expression.  Regardless of strategy, globals that cannot be located will generate an error with an informative message.  Also, in order to protect against exporting too large objects by mistake, there is also a built-in assertion that the total size of all globals is less than a given threshold (controllable via an option).  If the threshold is exceeded, an informative error is thrown.</p></li>
 <li><p>Future <em>expressions are only evaluated once</em>.  As soon as the value (or an error) has been collected it will be available for all succeeding requests.</p></li>
 </ul>
 
@@ -402,7 +407,7 @@ failed to locate the corresponding object in the relevant environments: &#39;b&#
 <pre><code class="r">&gt; plan(eager)
 &gt; pid &lt;- Sys.getpid()
 &gt; pid
-[1] 5504
+[1] 13487
 &gt; a %&lt;-% {
 +     pid &lt;- Sys.getpid()
 +     cat(&quot;Resolving &#39;a&#39; ...\n&quot;)
@@ -421,13 +426,13 @@ Resolving &#39;b&#39; ...
 + }
 Resolving &#39;c&#39; ...
 &gt; b
-[1] 5504
+[1] 13487
 &gt; c
 [1] 6.28
 &gt; a
 [1] 3.14
 &gt; pid
-[1] 5504
+[1] 13487
 </code></pre>
 
 <p>Since eager evaluation is taking place, each of the three futures is resolved instantaneously in the moment it is created.  Note also how <code>pid</code> in the calling environment, which was assigned the process ID of the current process, is neither overwritten nor removed.  This is because futures are evaluated in a local environment.  Since synchronous (uni-)processing is used, future <code>b</code> is resolved by the main R process (still in a local environment), which is why the value of <code>b</code> and <code>pid</code> are the same.</p>
@@ -439,7 +444,7 @@ Resolving &#39;c&#39; ...
 <pre><code class="r">&gt; plan(lazy)
 &gt; pid &lt;- Sys.getpid()
 &gt; pid
-[1] 5504
+[1] 13487
 &gt; a %&lt;-% {
 +     pid &lt;- Sys.getpid()
 +     cat(&quot;Resolving &#39;a&#39; ...\n&quot;)
@@ -457,14 +462,14 @@ Resolving &#39;c&#39; ...
 Resolving &#39;a&#39; ...
 &gt; b
 Resolving &#39;b&#39; ...
-[1] 5504
+[1] 13487
 &gt; c
 Resolving &#39;c&#39; ...
 [1] 6.28
 &gt; a
 [1] 3.14
 &gt; pid
-[1] 5504
+[1] 13487
 </code></pre>
 
 <p>As previously, variable <code>pid</code> is unaffected because all evaluation is done in a local environment.  More interestingly, future <code>a</code> is no longer evaluated in the moment it is created, but instead when it is needed the first time, which happens when future <code>c</code> is created.  This is because <code>a</code> is identified as a global variable that needs to be captured (&ldquo;frozen&rdquo; to <code>a == 3.14</code>) in order to set up future <code>c</code>.  Later when <code>c</code> (the value of future <code>c</code>) is queried, <code>a</code> has already been resolved and only the expression for future <code>c</code> is evaluated and <code>6.14</code> is obtained.  Moreover, future <code>b</code> is, just like future <code>a</code>, evaluated only when it is needed the first time, which happens here when <code>b</code> is printed.  As for eager evaluation, lazy evaluation is also synchronous, which is why <code>b</code> and <code>pid</code> have the same value.  Finally, notice also how <code>a</code> is not re-evaluated when we query the value again.  Actually, with implicit futures, variables <code>a</code>, <code>b</code> and <code>c</code> are all regular values as soon as their futures have been resolved.</p>
@@ -473,7 +478,7 @@ Resolving &#39;c&#39; ...
 
 <h3>Asynchronous Futures</h3>
 
-<p>Next we will turn to asynchronous futures, which are futures that are resolved in the background.  By design, these futures are non-blocking, that is after being created the calling process is available for other tasks including creating additional futures.  It is only when the calling process tries to access the value of a future that is not yet resolved, or trying to create another asynchronous future when all available R processes are busy serving other futures, that it blocks.</p>
+<p>Next, we will turn to asynchronous futures, which are futures that are resolved in the background.  By design, these futures are non-blocking, that is, after being created the calling process is available for other tasks including creating additional futures.  It is only when the calling process tries to access the value of a future that is not yet resolved, or trying to create another asynchronous future when all available R processes are busy serving other futures, that it blocks.</p>
 
 <h4>Multisession Futures</h4>
 
@@ -482,7 +487,7 @@ Resolving &#39;c&#39; ...
 <pre><code class="r">&gt; plan(multisession)
 &gt; pid &lt;- Sys.getpid()
 &gt; pid
-[1] 5504
+[1] 13487
 &gt; a %&lt;-% {
 +     pid &lt;- Sys.getpid()
 +     cat(&quot;Resolving &#39;a&#39; ...\n&quot;)
@@ -498,13 +503,13 @@ Resolving &#39;c&#39; ...
 +     2 * a
 + }
 &gt; b
-[1] 7640
+[1] 13513
 &gt; c
 [1] 6.28
 &gt; a
 [1] 3.14
 &gt; pid
-[1] 5504
+[1] 13487
 </code></pre>
 
 <p>The first thing we observe is that the values of <code>a</code>, <code>c</code> and <code>pid</code> are the same as previously.  However, we notice that <code>b</code> is different from before.  This is because future <code>b</code> is evaluated in a different R process and therefore it returns a different process ID.  Another difference is that the messages, generated by <code>cat()</code>, are no longer displayed.  This is because they are outputted to the background sessions and not the calling session.</p>
@@ -516,7 +521,7 @@ mc.cores+1
          3 
 </code></pre>
 
-<p>This particular result tells us that option <code>mc.cores</code> was set such that we are allowed to use in total 3 processes including the main process.  In other words, with these settings there will be 2 background processes serving the multisession futures.  The <code>availableCores()</code> is also agile to different options and system environment variables.  For instance, if compute cluster schedulers are used (e.g. TORQUE/PBS and Slurm), they set specific environment variable specifying the number of cores that was allotted to any given job; <code>availableCores()</code> acknowledges these as well.  If nothing else is specified, all available cores on the machine will be utilized, cf. <code>parallel::detectCores()</code>.  For more details, please see <code>help(&quot;availableCores&quot;, package=&quot;future&quot;)</code>.</p>
+<p>This particular result tells us that option <code>mc.cores</code> was set such that we are allowed to use in total 3 processes including the main process.  In other words, with these settings, there will be 2 background processes serving the multisession futures.  The <code>availableCores()</code> is also agile to different options and system environment variables.  For instance, if compute cluster schedulers are used (e.g. TORQUE/PBS and Slurm), they set specific environment variable specifying the number of cores that was allotted to any given job; <code>availableCores()</code> acknowledges these as well.  If nothing else is specified, all available cores on the machine will be utilized, cf. <code>parallel::detectCores()</code>.  For more details, please see <code>help(&quot;availableCores&quot;, package=&quot;future&quot;)</code>.</p>
 
 <h4>Multicore Futures</h4>
 
@@ -532,7 +537,7 @@ To use multicore futures, we specify:</p>
 
 <h4>Multiprocess Futures</h4>
 
-<p>Sometimes we do not know whether multicore futures are supported or not, but it might still be that we would like to write platform-independent scripts or instructions that works everywhere.  In such cases we can specify that we want to use &ldquo;multiprocess&rdquo; futures as in:</p>
+<p>Sometimes we do not know whether multicore futures are supported or not, but it might still be that we would like to write platform-independent scripts or instructions that work everywhere.  In such cases we can specify that we want to use &ldquo;multiprocess&rdquo; futures as in:</p>
 
 <pre><code class="r">plan(multiprocess)
 </code></pre>
@@ -541,14 +546,12 @@ To use multicore futures, we specify:</p>
 
 <h4>Cluster Futures</h4>
 
-<p>Cluster futures evaluate expressions on an ad-hoc cluster that was set up via <code>parallel::makeCluster()</code>.  For instance, assume you have access to three nodes <code>n1</code>, <code>n2</code> and <code>n3</code>, you can then use these for asynchronous evaluation as:</p>
+<p>Cluster futures evaluate expressions on an ad-hoc cluster (as implemented by the parallel package).  For instance, assume you have access to three nodes <code>n1</code>, <code>n2</code> and <code>n3</code>, you can then use these for asynchronous evaluation as:</p>
 
-<pre><code class="r">&gt; hosts &lt;- c(&quot;n1&quot;, &quot;n2&quot;, &quot;n3&quot;)
-&gt; cl &lt;- parallel::makeCluster(hosts)
-&gt; plan(cluster, workers = cl)
+<pre><code class="r">&gt; plan(cluster, workers = c(&quot;n1&quot;, &quot;n2&quot;, &quot;n3&quot;))
 &gt; pid &lt;- Sys.getpid()
 &gt; pid
-[1] 5504
+[1] 13487
 &gt; a %&lt;-% {
 +     pid &lt;- Sys.getpid()
 +     cat(&quot;Resolving &#39;a&#39; ...\n&quot;)
@@ -564,16 +567,24 @@ To use multicore futures, we specify:</p>
 +     2 * a
 + }
 &gt; b
-[1] 1588
+[1] 13537
 &gt; c
 [1] 6.28
 &gt; a
 [1] 3.14
 &gt; pid
-[1] 5504
+[1] 13487
 </code></pre>
 
-<p>Just as for the other asynchronous evaluation strategies, the output from <code>cat()</code> is not displayed on the current/calling machine.  By the way, it is considered good style to shut down the cluster when it is no longer needed, that is, calling <code>parallel::stopCluster(cl)</code>.  However, it will shut itself down if the main process is terminated.  For more information on how to setup and manage such clusters, see <code>help(&quot;makeCluster&quot;, package=&quot;parallel&quot;)</code>.</p>
+<p>Just as for the other asynchronous evaluation strategies, the output from <code>cat()</code> is not displayed on the current/calling machine.</p>
+
+<p>Any types of clusters that <code>parallel::makeCluster()</code> creates can be used for cluster futures.  For instance, the above cluster can be explicitly set up as:</p>
+
+<pre><code class="r">cl &lt;- parallel::makeCluster(c(&quot;n1&quot;, &quot;n2&quot;, &quot;n3&quot;))
+plan(cluster, workers=cl)
+</code></pre>
+
+<p>Also, it is considered good style to shut down the cluster when it is no longer needed, that is, calling <code>parallel::stopCluster(cl)</code>.  However, it will shut itself down if the main process is terminated, which will happen in the first example where the cluster in created internally.  For more information on how to set up and manage such clusters, see <code>help(&quot;makeCluster&quot;, package=&quot;parallel&quot;)</code>.</p>
 
 <p>Note that with proper configuration and automatic authentication setup (e.g. SSH key pairs), there is nothing preventing us from using the same approach for using a cluster of remote machines.</p>
 
@@ -584,7 +595,7 @@ To use multicore futures, we specify:</p>
 <pre><code class="r">&gt; plan(eager)
 &gt; pid &lt;- Sys.getpid()
 &gt; pid
-[1] 5504
+[1] 13487
 &gt; a %&lt;-% {
 +     Sys.getpid()
 + }
@@ -595,20 +606,20 @@ To use multicore futures, we specify:</p>
 +     Sys.getpid()
 + } %plan% multiprocess
 &gt; a
-[1] 5504
+[1] 13487
 &gt; b
-[1] 7884
+[1] 13554
 &gt; c
-[1] 7640
+[1] 13555
 </code></pre>
 
 <p>As seen by the different process IDs, future <code>a</code> is evaluated eagerly using the same process as the calling environment whereas the other two are evaluated using multiprocess futures.</p>
 
-<p>However, using assigning different plans to individual futures this way has the drawback of hard coding the evaluation strategy.  Doing so may prevent some users from using your script or package, because they do not have the sufficient resources.  It may also prevent users with large amount of resources from utilizing those, because you assumed a less-powerful set of hardware.  Because of this, we recommend against the use of <code>%plan%</code> other than for interactive prototyping.</p>
+<p>However, using different plans to individual futures this way has the drawback of hard coding the evaluation strategy.  Doing so may prevent some users from using your script or your package, because they do not have the sufficient resources.  It may also prevent users with a lot of resources from utilizing those because you assumed a less-powerful set of hardware.  Because of this, we recommend against the use of <code>%plan%</code> other than for interactive prototyping.</p>
 
 <h3>Nested Futures and Evaluation Topologies</h3>
 
-<p>This far we have discussed what can be referred to as &ldquo;flat topology&rdquo; of futures, that is, all futures are created in and assigned to the same environment.  However, there is nothing stopping us from using a &ldquo;nested topology&rdquo; of futures, where one set of futures may in turn create another set of futures internally and so on.</p>
+<p>This far we have discussed what can be referred to as &ldquo;flat topology&rdquo; of futures, that is, all futures are created in and assigned to the same environment.  However, there is nothing stopping us from using a &ldquo;nested topology&rdquo; of futures, where one set of futures may, in turn, create another set of futures internally and so on.</p>
 
 <p>For instance, here is an example of two &ldquo;top&rdquo; futures (<code>a</code> and <code>b</code>) that uses multiprocess evaluation and where the second future (<code>b</code>) in turn uses two internal futures:</p>
 
@@ -631,15 +642,15 @@ To use multicore futures, we specify:</p>
 +     c(b.pid = Sys.getpid(), b1.pid = b1, b2.pid = b2)
 + }
 &gt; pid
-[1] 5504
+[1] 13487
 &gt; a
-[1] 7884
+[1] 13556
 &gt; b
  b.pid b1.pid b2.pid 
-  7640   7640   7640 
+ 13557  13557  13557 
 </code></pre>
 
-<p>By inspection the process IDs, we see that there are in total three different processes involved for resolving the futures.  There is the main R process (pid=5504), and there are the two processes used by <code>a</code> (pid=7884) and <code>b</code> (pid=7640).  However, the two futures (<code>b1</code> and <code>b2</code>) that is nested by <code>b</code> are evaluated by the same R process as <code>b</code>.  This is because nested futures use eager evaluation unless otherwise specified.  There are a few reasons for this, but the main reason is that it protects us from spawning off a large number of background processes by mistake, e.g. via recursive calls.</p>
+<p>By inspection the process IDs, we see that there are in total three different processes involved for resolving the futures.  There is the main R process (pid=13487), and there are the two processes used by <code>a</code> (pid=13556) and <code>b</code> (pid=13557).  However, the two futures (<code>b1</code> and <code>b2</code>) that is nested by <code>b</code> are evaluated by the same R process as <code>b</code>.  This is because nested futures use eager evaluation unless otherwise specified.  There are a few reasons for this, but the main reason is that it protects us from spawning off a large number of background processes by mistake, e.g. via recursive calls.</p>
 
 <p>To specify a different type of <em>evaluation topology</em>, other than the first level of futures being resolved by multiprocess evaluation and the second level by eager evaluation, we can provide a list of evaluation strategies to <code>plan()</code>.  First, the same evaluation strategies as above can be explicitly specified as:</p>
 
@@ -651,12 +662,12 @@ To use multicore futures, we specify:</p>
 <pre><code class="r">&gt; plan(list(multiprocess, multiprocess))
 [...]
 &gt; pid
-[1] 5504
+[1] 13487
 &gt; a
-[1] 7884
+[1] 13558
 &gt; b
  b.pid b1.pid b2.pid 
-  7640   7640   7640 
+ 13559  13559  13559 
 </code></pre>
 
 <p>The reason for this is, also here, to protect us from launching more processes than what the machine can support.  Internally, this is done by setting <code>mc.cores</code> to zero (<a href="https://github.com/HenrikBengtsson/Wishlist-for-R/issues/7">sic!</a>) such that no <em>additional</em> parallel processes can be launched.  This is the case for both multisession and multicore evaluation.</p>
@@ -668,15 +679,15 @@ To use multicore futures, we specify:</p>
 Resolving &#39;a&#39; ...
 Resolving &#39;b&#39; ...
 &gt; pid
-[1] 5504
+[1] 13487
 &gt; a
-[1] 5504
+[1] 13487
 &gt; b
  b.pid b1.pid b2.pid 
-  5504   7884   7640 
+ 13487  13560  13561 
 </code></pre>
 
-<p>which clearly show that <code>a</code> and <code>b</code> are resolved in the calling process (pid 5504) whereas the two nested futures (<code>b1</code> and <code>b2</code>) are resolved in two separate R processes (pids 7884 and 7640).</p>
+<p>which clearly show that <code>a</code> and <code>b</code> are resolved in the calling process (pid 13487) whereas the two nested futures (<code>b1</code> and <code>b2</code>) are resolved in two separate R processes (pids 13560 and 13561).</p>
 
 <p>Having said this, it is indeed possible to use nested multiprocess evaluation strategies, if we explicitly specify (read <em>force</em>) the number of cores available at each level.  In order to do this we need to &ldquo;tweak&rdquo; the default settings, which can be done as follows:</p>
 
@@ -684,17 +695,17 @@ Resolving &#39;b&#39; ...
 +     workers = 3)))
 [...]
 &gt; pid
-[1] 5504
+[1] 13487
 &gt; a
-[1] 7884
+[1] 13562
 &gt; b
  b.pid b1.pid b2.pid 
-  7640   8188   8020 
+ 13563  13590  13592 
 </code></pre>
 
-<p>First, we see that both <code>a</code> and <code>b</code> are resolved in different processes (pids 7884 and 7640) than the calling process (pid 5504).  Second, the two nested futures (<code>b1</code> and <code>b2</code>) are resolved in yet two other R processes (pids 8188 and 8020).</p>
+<p>First, we see that both <code>a</code> and <code>b</code> are resolved in different processes (pids 13562 and 13563) than the calling process (pid 13487).  Second, the two nested futures (<code>b1</code> and <code>b2</code>) are resolved in yet two other R processes (pids 13590 and 13592).</p>
 
-<p>To clarify, when we setup the two levels of multiprocess evaluation, we specified that in total 3 processes may be used at each level.  We choose three parallel processes, not just two, because one is always consumed by the calling process leaving two to be used for the asynchronous futures.  This is why we see that <code>pid</code>, <code>a</code> and <code>b</code> are all resolved by the same process.  If we had allowed only two cores at the top level, <code>a</code> and <code>b</code> would have been resolved by the same background process.  The same applies for the second level of futures.  This brings us to another point.  When we use asynchronous futures, there is nothing per se that prevents us from using the main process to keep doing computations while checking in on the asynchronous futures now and then to see if they are resolved.</p>
+<p>To clarify, when we set up the two levels of multiprocess evaluation, we specified that in total 3 processes may be used at each level.  We choose three parallel processes, not just two, because one is always consumed by the calling process leaving two to be used for the asynchronous futures.  This is why we see that <code>pid</code>, <code>a</code> and <code>b</code> are all resolved by the same process.  If we had allowed only two cores at the top level, <code>a</code> and <code>b</code> would have been resolved by the same background process.  The same applies for the second level of futures.  This brings us to another point.  When we use asynchronous futures, there is nothing per se that prevents us from using the main process to keep doing computations while checking in on the asynchronous futures now and then to see if they are resolved.</p>
 
 <p>For more details on working with nested futures and different evaluation strategies at each level, see Vignette &#39;<a href="future-3-topologies.html">Futures in R: Future Topologies</a>&#39;.</p>
 
@@ -721,10 +732,12 @@ Waiting for &#39;a&#39; to be resolved ...
 1 
 2 
 3 
+4 
+5 
 &gt; cat(&quot;Waiting for &#39;a&#39; to be resolved ... DONE\n&quot;)
 Waiting for &#39;a&#39; to be resolved ... DONE
 &gt; a
-[1] 7884
+[1] 13593
 </code></pre>
 
 <h2>Failed Futures</h2>
@@ -788,7 +801,7 @@ failed to locate the corresponding object in the relevant environments: &#39;a&#
 [1] 9
 </code></pre>
 
-<p>Moreover, if a global is defined in a package, then that global is not exported but instead it is made sure that the corresponding package is attached when the future is evaluated.  This not only better reflects the setup of the main R session, but it also minimizes the need for exporting globals, which saves not only memory, but also time and bandwidth, especially when using remote compute nodes.</p>
+<p>Moreover, if a global is defined in a package, then that global is not exported.  Instead, it is made sure that the corresponding package is attached when the future is evaluated.  This not only better reflects the setup of the main R session, but it also minimizes the need for exporting globals, which saves not only memory but also time and bandwidth, especially when using remote compute nodes.</p>
 
 <p>As mentioned previously, for consistency across evaluation strategies, all types of futures validate globals upon creation.  This is also true for cases where it would not be necessary, e.g. for eager evaluation of multicore evaluation (which forks the calling process &ldquo;as-is&rdquo;).  However, in order to make it as easy as possible to switch between strategies without being surprised by slightly different behaviors, the Future API is designed to check for globals the same way regardless of strategy.</p>
 
@@ -810,9 +823,9 @@ failed to locate the corresponding object in the relevant environments: &#39;a&#
 &gt; v &lt;- lapply(f, FUN = value)
 &gt; str(v)
 List of 3
- $ : int 7884
- $ : int 7640
- $ : int 7884
+ $ : int 13598
+ $ : int 13599
+ $ : int 13605
 </code></pre>
 
 <p>This is <em>not</em> possible to do when using implicit futures.  This is because the <code>%&lt;-%</code> assignment operator <em>cannot</em> be used in all cases where the regular <code>&lt;-</code> assignment operator can be used.  It can only be used to assign future values to <em>environments</em> (including the calling environment) much like how <code>assign(name, value, envir)</code> works.  However, we can assign implicit futures to environments using <em>named indices</em>, e.g.</p>
@@ -827,9 +840,9 @@ List of 3
 &gt; v &lt;- as.list(v)
 &gt; str(v)
 List of 3
- $ a: int 7884
- $ b: int 7640
- $ c: int 7884
+ $ a: int 13606
+ $ b: int 13607
+ $ c: int 13610
 </code></pre>
 
 <p>Here <code>as.list(v)</code> blocks until all futures in the environment <code>v</code> have been resolved.  Then their values are collected and returned as a regular list.</p>
@@ -847,16 +860,16 @@ List of 3
 &gt; v &lt;- as.list(v)
 &gt; str(v)
 List of 3
- $ : int 7884
- $ : int 7640
- $ : int 7884
+ $ : int 13611
+ $ : int 13612
+ $ : int 13616
 </code></pre>
 
 <p>As previously, <code>as.list(v)</code> blocks until all futures are resolved.</p>
 
 <h2>Demos</h2>
 
-<p>To see a live illustration how different types of futures are evaluated, run the Mandelbrot demo of this package.  First try with the eager evaluation,</p>
+<p>To see a live illustration how different types of futures are evaluated, run the Mandelbrot demo of this package.  First, try with the eager evaluation,</p>
 
 <pre><code class="r">library(&quot;future&quot;)
 plan(eager)
@@ -878,14 +891,11 @@ demo(&quot;mandelbrot&quot;, package=&quot;future&quot;, ask=FALSE)
 
 <p>This will use multicore processing if you are on a system where R supports process forking, otherwise (such as on Windows) it will use multisession processing.</p>
 
-<p>Finally, if you have access to multiple machines you can try to setup a cluster of workers and use them, e.g.</p>
+<p>Finally, if you have access to multiple machines you can try to set up a cluster of workers and use them, e.g.</p>
 
-<pre><code class="r">cl &lt;- parallel::makeCluster(c(&quot;n2&quot;, &quot;n5&quot;, &quot;n6&quot;, &quot;n6&quot;, &quot;n9&quot;))
-plan(cluster, workers=cl)
+<pre><code class="r">plan(cluster, workers=c(&quot;n2&quot;, &quot;n5&quot;, &quot;n6&quot;, &quot;n6&quot;, &quot;n9&quot;))
 demo(&quot;mandelbrot&quot;, package=&quot;future&quot;, ask=FALSE)
 </code></pre>
-
-<p>It&#39;s always good to call <code>parallel::stopCluster(cl)</code> when you&#39;re done with this cluster, but if you forget it will be done automatically when you quit R.</p>
 
 <h2>Contributing</h2>
 

@@ -1,7 +1,8 @@
 Package: future
-Version: 0.14.0
+Version: 0.15.0
 Title: A Future API for R
-Imports: digest, globals (>= 0.6.1), listenv (>= 0.6.0), parallel
+Imports: digest, globals (>= 0.6.1), listenv (>= 0.6.0), parallel,
+        utils
 Suggests: R.rsp, markdown
 VignetteBuilder: R.rsp
 Authors@R: c(person("Henrik", "Bengtsson", role=c("aut", "cre", "cph"),
@@ -34,8 +35,8 @@ URL: https://github.com/HenrikBengtsson/future
 BugReports: https://github.com/HenrikBengtsson/future/issues
 RoxygenNote: 5.0.1
 NeedsCompilation: no
-Packaged: 2016-05-16 17:35:00 UTC; hb
+Packaged: 2016-06-14 04:07:08 UTC; hb
 Author: Henrik Bengtsson [aut, cre, cph]
 Maintainer: Henrik Bengtsson <henrikb@braju.com>
 Repository: CRAN
-Date/Publication: 2016-05-17 01:08:28
+Date/Publication: 2016-06-14 10:31:31
