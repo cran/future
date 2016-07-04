@@ -1,5 +1,5 @@
 Package: future
-Version: 1.0.0
+Version: 1.0.1
 Title: A Future API for R
 Imports: digest, globals (>= 0.6.1), listenv (>= 0.6.0), parallel,
         utils
@@ -35,8 +35,8 @@ URL: https://github.com/HenrikBengtsson/future
 BugReports: https://github.com/HenrikBengtsson/future/issues
 RoxygenNote: 5.0.1
 NeedsCompilation: no
-Packaged: 2016-06-24 06:16:46 UTC; hb
+Packaged: 2016-07-04 06:43:45 UTC; hb
 Author: Henrik Bengtsson [aut, cre, cph]
 Maintainer: Henrik Bengtsson <henrikb@braju.com>
 Repository: CRAN
-Date/Publication: 2016-06-24 09:53:40
+Date/Publication: 2016-07-04 09:31:07

@@ -262,6 +262,43 @@ Error in x$c &lt;- 3 : object &#39;x&#39; not found
 
 <p><em>Comment</em>: The goal is that the <a href="https://cran.r-project.org/package=globals">globals</a> package will also handle the above case in a future version.  </p>
 
+<h4>Global variable specified as part of formula</h4>
+
+<p>Global variables that are part of formulas are currently not identified automatically.  For example,</p>
+
+<pre><code class="r">&gt; library(&quot;future&quot;)
+&gt; plan(multisession)
+&gt;
+&gt; x &lt;- 1:10
+&gt; y &lt;- rnorm(10)
+&gt; fit %&lt;-% lm(y ~ x)
+&gt; fit
+Received error on future: &#39;Error: object &#39;y&#39; not found
+&#39;
+Future state: &#39;failed&#39;
+Future value: &#39;Error: object &#39;y&#39; not found
+&#39;
+Error: object &#39;y&#39; not found
+</code></pre>
+
+<p>The workaround is to guide R by specifying such variables explicitly, e.g.</p>
+
+<pre><code class="r">&gt; fit %&lt;-% {
++   x; y  ## Force &#39;x&#39; and &#39;y&#39; to be global
++   lm(y ~ x)
++ }
+&gt; fit
+
+Call:
+lm(formula = y ~ x)
+
+Coefficients:
+(Intercept)            x  
+   -0.40506      0.01751  
+</code></pre>
+
+<p><em>Comment</em>: The goal is that the <a href="https://cran.r-project.org/package=globals">globals</a> package will also handle the above case in a future version.  </p>
+
 <h4>do.call() - function not found</h4>
 
 <p>When calling a function using <code>do.call()</code> make sure to specify the function as the object itself and not by name.  This will help identify the function as a global object in the future expression.  For instance, use</p>
