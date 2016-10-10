@@ -214,90 +214,31 @@ hr {
 
 <h3>Missing or incorrect globals (false negatives)</h3>
 
-<h4>Global variable obscured by subassignment</h4>
+<h4>Missing globals due to self assignment</h4>
 
-<p>When a global variable is a vector, a matrix, a list, a data frame, an environment, or any other type of object that can be assigned via subsetting, the global package fails to identify it as a global variable if its first occurrence in the future expression is as part of a subsetting assignment.
-For example,</p>
+<p>If a global variable is (only) part of a &ldquo;self&rdquo; assignment, such as <code>x &lt;- x + 1</code>, then the global is not identified and therefore neither exported / frozen.  This explains the error in the following example:</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
-&gt; plan(lazy)
-&gt; x &lt;- matrix(1:12, nrow=3, ncol=4)
-&gt; y %&lt;-% {
-+   x[1,1] &lt;- 3
-+   42
-+ }
+&gt; plan(&quot;lazy&quot;)
+&gt; x &lt;- 0
+&gt; y %&lt;-% { x &lt;- x + 1 }
 &gt; rm(x)
 &gt; y
-Error in x[1, 1] &lt;- 3 : object &#39;x&#39; not found
+Error: object &#39;x&#39; not found
 </code></pre>
 
-<p>Another example is</p>
+<p>The workaround is to guide R to find the missing global by explicitly listing it, e.g.</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
-&gt; plan(lazy)
-&gt; x &lt;- list(a=1, b=2)
-&gt; y %&lt;-% {
-+   x$c &lt;- 3
-+   42
-+ }
+&gt; plan(&quot;lazy&quot;)
+&gt; x &lt;- 0
+&gt; y %&lt;-% { x; x &lt;- x + 1 }
 &gt; rm(x)
 &gt; y
-Error in x$c &lt;- 3 : object &#39;x&#39; not found
+[1] 1
 </code></pre>
 
-<p>A workaround is to explicitly tell the future package about the global variable by simply listing it at the beginning of the expression, e.g.</p>
-
-<pre><code class="r">&gt; library(&quot;future&quot;)
-&gt; plan(lazy)
-&gt; x &lt;- list(a=1, b=2)
-&gt; y %&lt;-% {
-+   x  ## Force &#39;x&#39; to be global
-+   x$c &lt;- 3
-+   42
-+ }
-&gt; rm(x)
-&gt; y
-[1] 42
-</code></pre>
-
-<p><em>Comment</em>: The goal is that the <a href="https://cran.r-project.org/package=globals">globals</a> package will also handle the above case in a future version.  </p>
-
-<h4>Global variable specified as part of formula</h4>
-
-<p>Global variables that are part of formulas are currently not identified automatically.  For example,</p>
-
-<pre><code class="r">&gt; library(&quot;future&quot;)
-&gt; plan(multisession)
-&gt;
-&gt; x &lt;- 1:10
-&gt; y &lt;- rnorm(10)
-&gt; fit %&lt;-% lm(y ~ x)
-&gt; fit
-Received error on future: &#39;Error: object &#39;y&#39; not found
-&#39;
-Future state: &#39;failed&#39;
-Future value: &#39;Error: object &#39;y&#39; not found
-&#39;
-Error: object &#39;y&#39; not found
-</code></pre>
-
-<p>The workaround is to guide R by specifying such variables explicitly, e.g.</p>
-
-<pre><code class="r">&gt; fit %&lt;-% {
-+   x; y  ## Force &#39;x&#39; and &#39;y&#39; to be global
-+   lm(y ~ x)
-+ }
-&gt; fit
-
-Call:
-lm(formula = y ~ x)
-
-Coefficients:
-(Intercept)            x  
-   -0.40506      0.01751  
-</code></pre>
-
-<p><em>Comment</em>: The goal is that the <a href="https://cran.r-project.org/package=globals">globals</a> package will also handle the above case in a future version.  </p>
+<p><em>Comment:</em> The goal is to in a future version of the package detect globals also in such self-assignment constructs.</p>
 
 <h4>do.call() - function not found</h4>
 
@@ -312,7 +253,7 @@ Coefficients:
 </code></pre>
 
 <p>so that <code>file_ext()</code> is properly located and exported.  Although you may not notice a difference when evaluating futures in the same R session, it may become a problem if you use a character string instead of a function object when futures are evaluated in external R sessions, such as on a cluster.
-It may also become a problem with lazy futures if the intended function is redefined after the future is resolved.  For example,</p>
+It may also become a problem with lazy uniprocess futures if the intended function is redefined after the future is resolved.  For example,</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
 &gt; library(&quot;listenv&quot;)
@@ -390,7 +331,7 @@ Error: Invalid usage of futures: A future whose value has not yet been collected
 
 <p>As previously, this can be avoided by making sure <code>x$a</code> is resolved first, which can be one in various ways, e.g. <code>dummy &lt;- x$a</code>, <code>resolve(x$a)</code> and <code>force(x$a)</code>.</p>
 
-<p><em>Footnote</em>: (*) Although certain types of futures, such as eager and lazy ones, could be passed on to other futures and be resolved there because they share the same evaluation process, by definition of the Future API it is invalid to do so regardless of future type.  This conservative approach is taken in order to make future expressions behave consistently regardless of the type of future used.</p>
+<p><em>Footnote</em>: (*) Although uniprocess futures could be passed on to other futures part of the same R process and be resolved there because they share the same evaluation process, by definition of the Future API it is invalid to do so regardless of future type.  This conservative approach is taken in order to make future expressions behave consistently regardless of the type of future used.</p>
 
 <h2>Miscellaneous</h2>
 
@@ -474,6 +415,35 @@ Error in x %&lt;-% 2 * runif(1) : non-numeric argument to binary operator
 </code></pre>
 
 <p>Parentheses will also do.  For details on precedence on operators in R, see Section &#39;Infix and prefix operators&#39; in the &#39;R Language Definition&#39; document.</p>
+
+<h3>R CMD check NOTEs</h3>
+
+<p>The code inspection run by <code>R CMD check</code> will not recognize the future assignment operator <code>%&lt;-%</code> as an assignment operator, which is not surprising because <code>%&lt;-%</code> is technically an infix operator.  This means that if you for instance use the following code in your package:</p>
+
+<pre><code class="r">foo &lt;- function() {
+  b &lt;- 3.14
+  a %&lt;-% { b + 1 }
+  a
+}
+</code></pre>
+
+<p>then <code>R CMD check</code> will produce a NOTE saying:</p>
+
+<pre><code class="sh">* checking R code for possible problems ... NOTE
+foo: no visible binding for global variable &#39;a&#39;
+Undefined global functions or variables:
+  a
+</code></pre>
+
+<p>In order to avoid this, we can add a dummy assignment of the missing global at the top of the function, i.e.</p>
+
+<pre><code class="r">foo &lt;- function() {
+  a &lt;- NULL ## To please R CMD check
+  b &lt;- 3.14
+  a %&lt;-% { b + 1 }
+  a
+}
+</code></pre>
 
 <hr/>
 
