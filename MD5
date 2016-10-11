@@ -1,6 +1,6 @@
-ab6b96899b26393ecc802f60f43ca729 *DESCRIPTION
+2527b923c6a25c79f964f5625a0d193c *DESCRIPTION
 52de43deb2a0e2707b5fe31b6b63ed69 *NAMESPACE
-37ca441a7b009df994f3e41ef00ea35b *NEWS
+a47c36f7f482effed361f27c27d257e2 *NEWS
 c0b0c439318f5a1129e4d8bb5e981ca4 *R/ClusterFuture-class.R
 ed3f68108e413f9d6b49d08399f161a9 *R/ClusterRegistry.R
 6313ec2c6ece979cea6a4c6ce8bf0edd *R/ConstantFuture-class.R
@@ -37,7 +37,7 @@ dc2c39da5582d5c85e4d3259ec7889d3 *R/nbrOfWorkers.R
 960857a106a23b81aab37afdadc14daf *R/options.R
 bc8f221d76bf33c012917333f6fa378c *R/plan.R
 c76414f40a15c709ea31ce18e1cc57a1 *R/plan_OP.R
-11849576239a555cc3146935fcbf9cd9 *R/remote.R
+4b6c156c0cda3c8da1dad2f070bd9a3e *R/remote.R
 7958901c3d58c2b53cee351480ac7a73 *R/resolve.R
 c252cf985ed0c07a3466b1a052534bd6 *R/resolved.R
 b681fcbaa09d942e781f2946ea35905f *R/signalEarly.R
