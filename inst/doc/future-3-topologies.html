@@ -266,11 +266,11 @@ bams &lt;- as.list(bams)
 
 <p>The internals for processing multiprocess future queries <code>availableCores()</code> to infer how many cores can be used simultaneously, so there is no need to explicitly specify that there are 8 cores available.</p>
 
-<p><em>Comment</em>: Since synchronous is the default future, we could skip trailing synchronous eager futures in the setup, e.g. <code>plan(list(multiprocess))</code> or just <code>plan(uniprocess)</code>.  However, it does not hurt to be explicit.</p>
+<p><em>Comment</em>: Since synchronous is the default future, we could skip trailing synchronous eager futures in the setup, e.g. <code>plan(list(multiprocess))</code> or just <code>plan(eager)</code>.  However, it does not hurt to be explicit.</p>
 
 <p>If we instead would like to process the sample sequentially and the chromosomes in parallel, we can use:</p>
 
-<pre><code class="r">plan(list(uniprocess, multiprocess))
+<pre><code class="r">plan(list(eager, multiprocess))
 </code></pre>
 
 <p>We could also process the data such that we allocate two cores for processing two samples in parallel each using four cores for processing four chromosomes in parallel:</p>
