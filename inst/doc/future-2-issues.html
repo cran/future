@@ -219,9 +219,9 @@ hr {
 <p>If a global variable is (only) part of a &ldquo;self&rdquo; assignment, such as <code>x &lt;- x + 1</code>, then the global is not identified and therefore neither exported / frozen.  This explains the error in the following example:</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
-&gt; plan(&quot;lazy&quot;)
+&gt; plan(sequential)
 &gt; x &lt;- 0
-&gt; y %&lt;-% { x &lt;- x + 1 }
+&gt; y %&lt;-% { x &lt;- x + 1 } %lazy% TRUE
 &gt; rm(x)
 &gt; y
 Error: object &#39;x&#39; not found
@@ -230,9 +230,9 @@ Error: object &#39;x&#39; not found
 <p>The workaround is to guide R to find the missing global by explicitly listing it, e.g.</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
-&gt; plan(&quot;lazy&quot;)
+&gt; plan(sequential)
 &gt; x &lt;- 0
-&gt; y %&lt;-% { x; x &lt;- x + 1 }
+&gt; y %&lt;-% { x; x &lt;- x + 1 } %lazy% TRUE
 &gt; rm(x)
 &gt; y
 [1] 1
@@ -253,16 +253,16 @@ Error: object &#39;x&#39; not found
 </code></pre>
 
 <p>so that <code>file_ext()</code> is properly located and exported.  Although you may not notice a difference when evaluating futures in the same R session, it may become a problem if you use a character string instead of a function object when futures are evaluated in external R sessions, such as on a cluster.
-It may also become a problem with lazy futures if the intended function is redefined after the future is resolved.  For example,</p>
+It may also become a problem with futures evaluated with lazy evaluation if the intended function is redefined after the future is resolved.  For example,</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
 &gt; library(&quot;listenv&quot;)
 &gt; library(&quot;tools&quot;)
-&gt; plan(lazy)
+&gt; plan(sequential)
 &gt; pathnames &lt;- c(&quot;foo.txt&quot;, &quot;bar.png&quot;, &quot;yoo.md&quot;)
 &gt; res &lt;- listenv()
 &gt; for (ii in seq_along(pathnames)) {
-+   res[[ii]] %&lt;-% do.call(&quot;file_ext&quot;, list(pathnames[ii]))
++   res[[ii]] %&lt;-% do.call(&quot;file_ext&quot;, list(pathnames[ii])) %lazy% TRUE
 + }
 &gt; file_ext &lt;- function(...) &quot;haha!&quot;
 &gt; unlist(res)
@@ -331,7 +331,7 @@ Error: Invalid usage of futures: A future whose value has not yet been collected
 
 <p>As previously, this can be avoided by making sure <code>x$a</code> is resolved first, which can be one in various ways, e.g. <code>dummy &lt;- x$a</code>, <code>resolve(x$a)</code> and <code>force(x$a)</code>.</p>
 
-<p><em>Footnote</em>: (*) Although eager futures could be passed on to other futures part of the same R process and be resolved there because they share the same evaluation process, by definition of the Future API it is invalid to do so regardless of future type.  This conservative approach is taken in order to make future expressions behave consistently regardless of the type of future used.</p>
+<p><em>Footnote</em>: (*) Although sequential futures could be passed on to other futures part of the same R process and be resolved there because they share the same evaluation process, by definition of the Future API it is invalid to do so regardless of future type.  This conservative approach is taken in order to make future expressions behave consistently regardless of the type of future used.</p>
 
 <h2>Miscellaneous</h2>
 
@@ -447,7 +447,7 @@ Undefined global functions or variables:
 
 <hr/>
 
-<p>Copyright Henrik Bengtsson, 2015-2016</p>
+<p>Copyright Henrik Bengtsson, 2015-2017</p>
 
 </body>
 
