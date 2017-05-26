@@ -204,13 +204,13 @@ hr {
 <body>
 <h1>A Future for R: Controlling Default Future Strategy</h1>
 
-<p>The default is to use synchronous futures, but this <em>default</em> can be overridden via R options, system environment variables and command-line options as explained below as well as in <code>help(&quot;future.options&quot;, package=&quot;future&quot;)</code>.</p>
+<p>The default is to use synchronous futures, but this <em>default</em> can be overridden via R options, system environment variables and command-line options as explained below as well as in <code>help(&quot;future.options&quot;, package = &quot;future&quot;)</code>.</p>
 
 <h2>R options</h2>
 
 <p>The default strategy for resolving futures can be controlled via R option <code>future.plan</code>.  For instance, if we add</p>
 
-<pre><code class="r">options(future.plan=&quot;multiprocess&quot;)
+<pre><code class="r">options(future.plan = &quot;multiprocess&quot;)
 </code></pre>
 
 <p>to our <code>~/.Rprofile</code> startup script, the future package will resolve futures in parallel (asynchronously using all available cores), i.e.</p>
@@ -242,8 +242,8 @@ $ Rscript -e &quot;class(future::plan())&quot;
 <p>then future will interpret this as we wish to resolve futures in parallel using 2 cores.  More specifically, we get that</p>
 
 <pre><code class="r">&gt; future::availableCores()
-mc.cores+1 
-         2
+mc.cores
+       2
 &gt; class(future::plan())
 [1] &quot;tweaked&quot;      &quot;multiprocess&quot; &quot;future&quot;       &quot;function&quot;
 </code></pre>

@@ -213,7 +213,7 @@ for (ii in 1:3) {
   x[[ii]] %&lt;-% {
     y &lt;- listenv()
     for (jj in 1:3) {
-      y[[jj]] %&lt;-% { ii + jj/10 }
+      y[[jj]] %&lt;-% { ii + jj / 10 }
     }
     y
   }
@@ -234,7 +234,7 @@ unlist(x)
 library(&quot;listenv&quot;)
 htseq_align &lt;- function(fq, chr) { chr }
 
-fqs &lt;- dir(pattern=&quot;[.]fastq$&quot;)
+fqs &lt;- dir(pattern = &quot;[.]fastq$&quot;)
 
 bams &lt;- listenv()
 for (ss in seq_along(fqs)) {
@@ -242,7 +242,7 @@ for (ss in seq_along(fqs)) {
   bams[[ss]] %&lt;-% {
     bams_ss &lt;- listenv()
     for (cc in 1:24) {
-      bams_ss[[cc]] %&lt;-% htseq_align(fq, chr=cc)
+      bams_ss[[cc]] %&lt;-% htseq_align(fq, chr = cc)
     }
     as.list(bams_ss)
   }
@@ -266,7 +266,7 @@ bams &lt;- as.list(bams)
 
 <p>The internals for processing multiprocess future queries <code>availableCores()</code> to infer how many cores can be used simultaneously, so there is no need to explicitly specify that there are 8 cores available.</p>
 
-<p><em>Comment</em>: Since synchronous is the default future, we could skip trailing sequential futures in the setup, e.g. <code>plan(list(multiprocess))</code> or just <code>plan(sequential)</code>.  However, it does not hurt to be explicit.</p>
+<p><em>Comment</em>: Since synchronous is the default future, we could skip trailing sequential futures in the setup, e.g. <code>plan(list(multiprocess))</code> or just <code>plan(multiprocess)</code>.  However, it does not hurt to be explicit.</p>
 
 <p>If we instead would like to process the sample sequentially and the chromosomes in parallel, we can use:</p>
 
@@ -275,7 +275,7 @@ bams &lt;- as.list(bams)
 
 <p>We could also process the data such that we allocate two cores for processing two samples in parallel each using four cores for processing four chromosomes in parallel:</p>
 
-<pre><code class="r">plan(list(tweak(multiprocess, workers=2), tweak(multiprocess, workers=4)))
+<pre><code class="r">plan(list(tweak(multiprocess, workers = 2), tweak(multiprocess, workers = 4)))
 </code></pre>
 
 <h3>An ad-hoc compute cluster</h3>
@@ -283,18 +283,18 @@ bams &lt;- as.list(bams)
 <p>With a compute cluster of 3 machines each with 16 cores, we can run up to 48 alignment processes in parallel.  A natural setup is to have one machine process one sample in parallel.  We could specify this as:</p>
 
 <pre><code class="r">nodes &lt;- c(&quot;n1&quot;, &quot;n2&quot;, &quot;n3&quot;)
-plan(list(tweak(cluster, workers=nodes), multiprocess))
+plan(list(tweak(cluster, workers = nodes), multiprocess))
 </code></pre>
 
 <p><em>Comment:</em> Multiprocess futures are agile to its environment, that is, they will query the machine they are running on to find out how many parallel processes it can run at the same time.</p>
 
 <p>One possible downside to the above setup is that we might not utilize all available cores all the time.  This is because the alignment of the shorter chromosomes will finish sooner than the longer ones, which means that we might at the end of each sample have only a few alignment processes running on each machine leaving the remaining cores idle/unused.  An alternative set up is then to use the following setup:</p>
 
-<pre><code class="r">nodes &lt;- rep(c(&quot;n1&quot;, &quot;n2&quot;, &quot;n3&quot;), each=8)
-plan(list(tweak(cluster, workers=nodes), multiprocess))
+<pre><code class="r">nodes &lt;- rep(c(&quot;n1&quot;, &quot;n2&quot;, &quot;n3&quot;), each = 8)
+plan(list(tweak(cluster, workers = nodes), multiprocess))
 </code></pre>
 
-<p>This will cause up to 24 (=3*8) samples to be processed in parallel each processing two chromosomes at the same time.</p>
+<p>This will cause up to 24 (= 3*8) samples to be processed in parallel each processing two chromosomes at the same time.</p>
 
 <h2>Example: A remote compute cluster</h2>
 
@@ -306,7 +306,7 @@ plan(list(tweak(cluster, workers=nodes), multiprocess))
 library(&quot;listenv&quot;)
 
 ## Set up access to remote login node
-login &lt;- tweak(remote, workers=&quot;remote.server.org&quot;)
+login &lt;- tweak(remote, workers = &quot;remote.server.org&quot;)
 plan(login)
 
 ## Set up cluster nodes on login node
@@ -316,7 +316,7 @@ nodes %&lt;-% { .keepme &lt;- parallel::makeCluster(c(&quot;n1&quot;, &quot;n2&q
 ## login node -&gt; { cluster nodes } -&gt; { multiple cores }
 plan(list(
   login,
-  tweak(cluster, workers=nodes),
+  tweak(cluster, workers = nodes),
   multiprocess
 ))
 
@@ -334,9 +334,11 @@ x %&lt;-% {
       z &lt;- listenv()
       for (jj in 1:2) {
         ## (c) These will be evaluated in separate processes on the same compute node
-        z[[jj]] %&lt;-% data.frame(task=task, top.host=thost, top.pid=tpid,
-                                mid.host=mhost, mid.pid=mpid,
-                                host=Sys.info()[[&quot;nodename&quot;]], pid=Sys.getpid())
+        z[[jj]] %&lt;-% data.frame(task = task,
+                                top.host = thost, top.pid = tpid,
+                                mid.host = mhost, mid.pid = mpid,
+                                host = Sys.info()[[&quot;nodename&quot;]],
+                                pid = Sys.getpid())
       }
       Reduce(rbind, z)
     }
