@@ -210,35 +210,31 @@ hr {
 
 <p><em>If you identify other cases, please consider <a href="https://github.com/HenrikBengtsson/future/issues/">reporting</a> them so they can be documented here and possibly even be fixed.</em></p>
 
-<h2>Issues with globals</h2>
+<h2>Issues with globals and packages</h2>
 
-<h3>Missing or incorrect globals (false negatives)</h3>
+<h3>Missing globals (false negatives)</h3>
 
-<h4>Missing globals due to self assignment</h4>
+<p>If a global variable is used in a future expression that <em>conditionally</em> overrides this global variable with a local one, the future framework fails to identify the global variable and therefore fails to export it, resulting in a run-time error.  For example, although this works:</p>
 
-<p>If a global variable is (only) part of a &ldquo;self&rdquo; assignment, such as <code>x &lt;- x + 1</code>, then the global is not identified and therefore neither exported / frozen.  This explains the error in the following example:</p>
+<pre><code class="r">library(multisession)
 
-<pre><code class="r">&gt; library(&quot;future&quot;)
-&gt; plan(sequential)
-&gt; x &lt;- 0
-&gt; y %&lt;-% { x &lt;- x + 1 } %lazy% TRUE
-&gt; rm(x)
-&gt; y
-Error: object &#39;x&#39; not found
+reset &lt;- TRUE
+x &lt;- 1
+y %&lt;-% { if (reset) x &lt;- 0; x + 1 }
+y
+## [1] 1
 </code></pre>
 
-<p>The workaround is to guide R to find the missing global by explicitly listing it, e.g.</p>
+<p>the following does <em>not</em> work:</p>
 
-<pre><code class="r">&gt; library(&quot;future&quot;)
-&gt; plan(sequential)
-&gt; x &lt;- 0
-&gt; y %&lt;-% { x; x &lt;- x + 1 } %lazy% TRUE
-&gt; rm(x)
-&gt; y
-[1] 1
+<pre><code class="r">reset &lt;- FALSE
+x &lt;- 1
+y %&lt;-% { if (reset) x &lt;- 0; x + 1 }
+y
+## Error: object &#39;x&#39; not found
 </code></pre>
 
-<p><em>Comment:</em> The goal is to in a future version of the package detect globals also in such self-assignment constructs.</p>
+<p><em>Comment:</em> The goal is to in a future version of the package detect globals also in expression where the local-global state of a variable is only known at run time.</p>
 
 <h4>do.call() - function not found</h4>
 
@@ -268,6 +264,153 @@ It may also become a problem with futures evaluated with lazy evaluation if the 
 &gt; unlist(res)
 [1] &quot;haha!&quot; &quot;haha!&quot; &quot;haha!&quot;
 </code></pre>
+
+<h3>Missing packages (false negatives)</h3>
+
+<p>Occassionally, the static-code inspection of the future expression fails to identify packages needed to evaluated the expression.  This may occur when a expression uses S3 generic functions part of one package whereas the required S3 method is in another package.  For example, in the below future generic function <code>[</code> is used on data.table object <code>DT</code>, which requires S3 method <code>[.data.table</code> from the data.table package.  However, the future and global packages fail to identify data.table as a required package, which results in an evaluation error:</p>
+
+<pre><code class="r">&gt; library(&quot;future&quot;)
+&gt; plan(multisession)
+
+&gt; library(&quot;data.table&quot;)
+&gt; DT &lt;- data.table(a = LETTERS[1:3], b = 1:3)
+&gt; y %&lt;-% DT[, sum(b)]
+&gt; y
+Error: object &#39;b&#39; not found
+</code></pre>
+
+<p>The above error occurs because, contrary to the master R process, the R worker that evaluated the future expression does not have data.table loaded.  Instead the evaluation falls back to the <code>[.data.frame</code> method, which is not what we want.</p>
+
+<p>Until the future framework manages to identify data.table as a required package (which is the goal), we can guide future by specifying additional packages needed:</p>
+
+<pre><code class="r">&gt; y %&lt;-% DT[, sum(b)] %packages% &quot;data.table&quot;
+&gt; y
+[1] 6
+</code></pre>
+
+<p>or equivalently</p>
+
+<pre><code class="r">&gt; f &lt;- future(DT[, sum(b)], packages = &quot;data.table&quot;)
+&gt; value(f)
+[1] 6
+</code></pre>
+
+<h2>Non-exportable objects</h2>
+
+<p>Certain types of objects are tied to a given R session and cannot be passed along to another R process (a &ldquo;worker&rdquo;).  For instance, if you create a file connection,</p>
+
+<pre><code class="r">&gt; con &lt;- file(&quot;output.log&quot;, open = &quot;wb&quot;)
+&gt; cat(&quot;hello &quot;, file = con)
+&gt; flush(con)
+&gt; readLines(&quot;output.log&quot;, warn = FALSE)
+[1] &quot;hello &quot;
+</code></pre>
+
+<p>it will not work when used in another R process(*).  If we try, the result is &ldquo;unknown&rdquo;, e.g.</p>
+
+<pre><code class="r">&gt; library(&quot;future&quot;)
+&gt; plan(multisession)
+&gt; f &lt;- future({ cat(&quot;world!&quot;, file = con); flush(con) })
+&gt; value(f)
+NULL
+&gt; close(con)
+&gt; readLines(&quot;output.log&quot;, warn = FALSE)
+[1] &quot;hello &quot;
+</code></pre>
+
+<p>In other words, the output <code>&quot;world!&quot;</code> written by the R worker is completely lost.</p>
+
+<p>The culprit here is that the connection uses a so called <em>external pointer</em>:</p>
+
+<pre><code class="r">&gt; str(con)
+Classes &#39;file&#39;, &#39;connection&#39;  atomic [1:1] 3
+  ..- attr(*, &quot;conn_id&quot;)=&lt;externalptr&gt; 
+</code></pre>
+
+<p>which is bound to the main R process and makes no sense to the worker.  Ideally, the R process of the worker would detect this and produce an informative error message, but as seen here, that does not always occur.</p>
+
+<p>To help avoiding these mistakes, the future framework provides a mechanism (<em>in beta</em>) can help detect non-exportable objects by setting:</p>
+
+<pre><code class="r">&gt; options(future.globals.onReference = &quot;warning&quot;)
+</code></pre>
+
+<p>which will result in a warning in the above example:</p>
+
+<pre><code class="r">&gt; f &lt;- future({ cat(&quot;world!&quot;, file = con); flush(con) })
+Warning in FALSE :
+  Detected a non-exportable reference (&#39;externalptr&#39;) in one of the globals
+(&#39;con&#39; of class &#39;file&#39;) used in the future expression
+</code></pre>
+
+<p>To be more conservative, we can also tell it to produce an error:</p>
+
+<pre><code class="r">&gt; options(future.globals.onReference = &quot;error&quot;)
+&gt; f &lt;- future({ cat(&quot;world!&quot;, file = con); flush(con) })
+Error in FALSE : 
+  Detected a non-exportable reference (&#39;externalptr&#39;) in one of the globals
+(&#39;con&#39; of class &#39;file&#39;) used in the future expression
+</code></pre>
+
+<p>Another example is XML objects of the xml2 package, which may produce evaluation errors (or just invalid results depending on how they are used), e.g.</p>
+
+<pre><code class="r">&gt; library(&quot;future&quot;)
+&gt; plan(multisession)
+&gt; library(&quot;xml2&quot;)
+&gt; xml &lt;- read_xml(&quot;&lt;body&gt;&lt;/body&gt;&quot;)
+&gt; f &lt;- future(xml_children(xml))
+&gt; value(f)
+Error: external pointer is not valid
+</code></pre>
+
+<p>The future framework can help detect this <em>before</em> sending off the future to the worker;</p>
+
+<pre><code class="r">&gt; options(future.globals.onReference = &quot;error&quot;)
+&gt; f &lt;- future(xml_children(xml))
+Error in FALSE : 
+  Detected a non-exportable reference (&#39;externalptr&#39;) in one of the globals
+(&#39;xml&#39; of class &#39;xml_document&#39;) used in the future expression
+</code></pre>
+
+<p>A third example is Rcpp which allow us to easily create R functions that are implemented in C++, e.g.</p>
+
+<pre><code class="r">Rcpp::sourceCpp(code = &quot;
+#include &lt;Rcpp.h&gt;
+using namespace Rcpp;
+
+// [[Rcpp::export]]
+int my_length(NumericVector x) {
+    return x.size();
+}
+&quot;)
+</code></pre>
+
+<p>so that:</p>
+
+<pre><code>&gt; x &lt;- 1:10
+&gt; my_length(x)
+[1] 10
+</code></pre>
+
+<p>However, since this function uses an external pointer internally, we cannot pass it to another R process:</p>
+
+<pre><code class="r">&gt; library(&quot;future&quot;)
+&gt; plan(multisession)
+&gt; n %&lt;-% my_length(x)
+&gt; n
+Error: NULL value passed as symbol address
+</code></pre>
+
+<p>We can detect / protect against this using:</p>
+
+<pre><code class="r">&gt; options(future.globals.onReference = &quot;error&quot;)
+&gt; n %&lt;-% my_length(x)
+Error in FALSE : 
+  Detected a non-exportable reference (&#39;externalptr&#39; of class &#39;NativeSymbol&#39;)
+in one of the globals (&#39;my_length&#39; of class &#39;function&#39;) used in the future
+expression
+</code></pre>
+
+<p>(*) The exception <em>may</em> be if you use forked R processes, e.g. <code>plan(multicore)</code>.</p>
 
 <h2>Trying to pass an unresolved future to another future</h2>
 
@@ -447,7 +590,7 @@ Undefined global functions or variables:
 
 <hr/>
 
-<p>Copyright Henrik Bengtsson, 2015-2017</p>
+<p>Copyright Henrik Bengtsson, 2015-2018</p>
 
 </body>
 

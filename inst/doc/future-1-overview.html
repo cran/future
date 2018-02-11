@@ -322,7 +322,7 @@ Resolving...
 <tr>
 <td align="left"><code>multiprocess</code></td>
 <td align="left">all</td>
-<td align="left">multicore iff supported, otherwise multisession</td>
+<td align="left">multicore, if supported, otherwise multisession</td>
 </tr>
 <tr>
 <td align="left"><code>multisession</code></td>
@@ -345,8 +345,6 @@ Resolving...
 <td align="left">Simple access to remote R sessions</td>
 </tr>
 </tbody></table>
-
-<p><em>Note</em>: Prior to future 1.3.0, <code>eager</code> and <code>lazy</code> were also options, but has since been deprecated and are both defunct as of 1.6.0.  The reason for this is that whether a future should be resolved by lazy evaluation or not has to, in some cases, be in the control of the developer, and if the end user would be able change that, the code may not function as intended.</p>
 
 <p>The future package is designed such that support for additional strategies can be implemented as well.  For instance, the <a href="https://cran.r-project.org/package=future.batchtools">future.batchtools</a> package provides futures for all types of <em>cluster functions</em> (&ldquo;backends&rdquo;) that the <a href="https://cran.r-project.org/package=batchtools">batchtools</a> package supports.  Specifically, futures for evaluating R expressions via job schedulers such as Slurm, TORQUE/PBS, Oracle/Sun Grid Engine (SGE) and Load Sharing Facility (LSF) are also available.  (<em>Comment</em>: The <a href="https://cran.r-project.org/package=future.BatchJobs">future.BatchJobs</a> package provides analogue backends based on the <a href="https://cran.r-project.org/package=BatchJobs">BatchJobs</a> package; however the BatchJobs developers have deprecated it in favor of batchtools.)</p>
 
