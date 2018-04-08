@@ -267,7 +267,7 @@ It may also become a problem with futures evaluated with lazy evaluation if the 
 
 <h3>Missing packages (false negatives)</h3>
 
-<p>Occassionally, the static-code inspection of the future expression fails to identify packages needed to evaluated the expression.  This may occur when a expression uses S3 generic functions part of one package whereas the required S3 method is in another package.  For example, in the below future generic function <code>[</code> is used on data.table object <code>DT</code>, which requires S3 method <code>[.data.table</code> from the data.table package.  However, the future and global packages fail to identify data.table as a required package, which results in an evaluation error:</p>
+<p>Occassionally, the static-code inspection of the future expression fails to identify packages needed to evaluated the expression.  This may occur when an expression uses S3 generic functions part of one package whereas the required S3 method is in another package.  For example, in the below future generic function <code>[</code> is used on data.table object <code>DT</code>, which requires S3 method <code>[.data.table</code> from the data.table package.  However, the future and global packages fail to identify data.table as a required package, which results in an evaluation error:</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
 &gt; plan(multisession)

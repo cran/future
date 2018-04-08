@@ -382,7 +382,7 @@ Resolving...
 
 <h3>Synchronous Futures</h3>
 
-<p>Synchronous futures are resolved one after another and most commonly by the R process that creates them.  When a synchronous future is being resolved it blocks the main process until resolved.  There are two types of synchronous futures in the future package, <em>sequential</em> and <em>transparent</em>.  (In future 1.2.0 and before, there was also <em>lazy</em> futures, which has now been deprecated in favor of <code>f &lt;- future(..., lazy = TRUE)</code> and <code>v %&lt;-% { ... } %lazy% TRUE</code>.)</p>
+<p>Synchronous futures are resolved one after another and most commonly by the R process that creates them.  When a synchronous future is being resolved it blocks the main process until resolved.  There are two types of synchronous futures in the future package, <em>sequential</em> and <em>transparent</em>.</p>
 
 <h4>Sequential Futures</h4>
 
@@ -664,46 +664,34 @@ Waiting for &#39;a&#39; to be resolved ... DONE
 <p>Sometimes the future is not what you expected.  If an error occurs while evaluating a future, the error is propagated and thrown as an error in the calling environment <em>when the future value is requested</em>.  For example, if we use lazy evaluation on a future that generates an error, we might see something like</p>
 
 <pre><code class="r">&gt; plan(sequential)
+&gt; b &lt;- &quot;hello&quot;
 &gt; a %&lt;-% {
 +     cat(&quot;Resolving &#39;a&#39; ...\n&quot;)
-+     stop(&quot;Whoops!&quot;)
-+     42
++     log(b)
 + } %lazy% TRUE
 &gt; cat(&quot;Everything is still ok although we have created a future that will fail.\n&quot;)
 Everything is still ok although we have created a future that will fail.
 &gt; a
 Resolving &#39;a&#39; ...
-Error in eval(expr, envir, enclos) : Whoops!
+Error in log(b) : non-numeric argument to mathematical function
 </code></pre>
 
 <p>The error is thrown each time the value is requested, that is, if we try to get the value again will generate the same error:</p>
 
 <pre><code class="r">&gt; a
-Error in eval(expr, envir, enclos) : Whoops!
+Error in log(b) : non-numeric argument to mathematical function
 In addition: Warning message:
 restarting interrupted promise evaluation
 </code></pre>
 
-<p>To see the list of calls (evaluated expressions) that lead up to the error, we can use the <code>backtrace()</code> function(*) on the future, i.e.</p>
+<p>To see the <em>last</em> call in the call stack that gave the error, we can use the <code>backtrace()</code> function(*) on the future, i.e.</p>
 
 <pre><code class="r">&gt; backtrace(a)
 [[1]]
-eval(quote({
-    cat(&quot;Resolving &#39;a&#39; ...\\n&quot;)
-    stop(&quot;Whoops!&quot;)
-    42
-}), new.env())
-[[2]]
-eval(quote({
-    cat(&quot;Resolving &#39;a&#39; ...\\n&quot;)
-    stop(&quot;Whoops!&quot;)
-    42
-}), new.env())
-[[3]]
-stop(&quot;Whoops!&quot;)
+log(a)
 </code></pre>
 
-<p>(*) The commonly used <code>traceback()</code> does not provide relevant information in the context of futures.</p>
+<p>(*) The commonly used <code>traceback()</code> does not provide relevant information in the context of futures.  Furthermore, it is unfortunately not possible to see the list of calls (evaluated expressions) that led up to the error; only the call that gave the error (this is due to a limitation in <code>tryCatch()</code> used internally).</p>
 
 <h2>Globals</h2>
 
@@ -799,7 +787,7 @@ demo(&quot;mandelbrot&quot;, package = &quot;future&quot;, ask = FALSE)
 
 <hr/>
 
-<p>Copyright Henrik Bengtsson, 2015-2017</p>
+<p>Copyright Henrik Bengtsson, 2015-2018</p>
 
 </body>
 
