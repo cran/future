@@ -351,6 +351,12 @@ Error in FALSE :
 (&#39;con&#39; of class &#39;file&#39;) used in the future expression
 </code></pre>
 
+<p>Below are few examples of commonly used packages that produce non-exportable objects.  If you find other examples, please report back.</p>
+
+<p>(*) The exception <em>may</em> be if you use <em>forked</em> R processes, e.g. <code>plan(multicore)</code>.  However, such attempts to work around the underlying problem, which is non-exportable objects, should be avoided and considered non-stable.  Moreover, such code will certainly fail to parallelize on other future backends.</p>
+
+<h3>Example: Non-exportable objects by the xml2 package</h3>
+
 <p>Another example is XML objects of the xml2 package, which may produce evaluation errors (or just invalid results depending on how they are used), e.g.</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
@@ -370,6 +376,8 @@ Error in FALSE :
   Detected a non-exportable reference (&#39;externalptr&#39;) in one of the globals
 (&#39;xml&#39; of class &#39;xml_document&#39;) used in the future expression
 </code></pre>
+
+<h3>Example: Non-exportable objects by the Rcpp package</h3>
 
 <p>A third example is Rcpp which allow us to easily create R functions that are implemented in C++, e.g.</p>
 
@@ -410,7 +418,71 @@ in one of the globals (&#39;my_length&#39; of class &#39;function&#39;) used in 
 expression
 </code></pre>
 
-<p>(*) The exception <em>may</em> be if you use forked R processes, e.g. <code>plan(multicore)</code>.</p>
+<h3>Example: Non-exportable objects by the rJava package</h3>
+
+<p>Here is an example that show how rJava objects cannot be used when
+exported to external R processes.</p>
+
+<pre><code class="r">&gt; library(&quot;future&quot;)
+&gt; plan(multisession)
+
+&gt; library(&quot;rJava&quot;)
+&gt; .jinit() Initialize Java VM on master
+
+&gt; Double &lt;- J(&quot;java.lang.Double&quot;)
+&gt; d0 &lt;- new(Double, &quot;3.14&quot;)
+&gt; print(d0)
+[1] &quot;Java-Object{3.14}&quot;
+
+&gt; f &lt;- future({
+    .jinit() ## Initialize Java VM on worker
+    new(Double, &quot;3.14&quot;)
+  })
+&gt; d1 &lt;- value(f)
+&gt; print(d1)
+## [1] &quot;Java-Object&lt;null&gt;&quot;
+</code></pre>
+
+<p>Although no error is produced, we see that the value <code>d1</code> is a Java NULL Object.  As before, we can catch this by using:</p>
+
+<pre><code class="r">&gt; options(future.globals.onReference = &quot;error&quot;)
+&gt; f &lt;- future({
+    .jinit() ## Initialize Java VM on worker
+    new(Double, &quot;3.14&quot;)
+&gt; })
+Error in FALSE : 
+  Detected a non-exportable reference (&#39;externalptr&#39;) in one of the globals
+  (&#39;Double&#39; of class &#39;jclassName&#39;) used in the future expression
+</code></pre>
+
+<h3>Example: Non-exportable objects by the rlang package</h3>
+
+<p>Yet another example comes from the rlang package.  This example is somewhat twisted - it uses <code>value(future(x))</code> which is quite meaningless by itself- but it is a minimal example of showing what can happen:</p>
+
+<pre><code class="r">&gt; library(&quot;future&quot;)
+&gt; plan(multisession)
+
+&gt; library(&quot;dplyr&quot;)  ## relies on &#39;rlang&#39;
+&gt; iris &lt;- as_tibble(iris)
+&gt; res &lt;- mutate(iris, mod = value(future({
+    list(lm(Species ~ Sepal.Length, data = .))
+  })))
+Error in mutate_impl(.data, dots) : 
+  Evaluation error: NULL value passed as symbol address.
+</code></pre>
+
+<p>In this case the mistake is caught by dplyr&#39;s <code>mutate_impl()</code>, but to be on the safe side, we could have used:</p>
+
+<pre><code class="r">&gt; options(future.globals.onReference = &quot;error&quot;)
+&gt; res &lt;- mutate(iris, mod = value(future({
+    list(lm(Species ~ Sepal.Length, data = .))
+  })))
+Timing stopped at: 0.004 0 0.001
+Error in mutate_impl(.data, dots) : 
+  Evaluation error: Detected a non-exportable reference (&#39;externalptr&#39;
+  of class &#39;RegisteredNativeSymbol&#39;) in one of the globals (&#39;~&#39; of
+  class &#39;function&#39;) used in the future expression.
+</code></pre>
 
 <h2>Trying to pass an unresolved future to another future</h2>
 
