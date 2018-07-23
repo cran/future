@@ -213,10 +213,10 @@ hr {
 <p>Here is an example illustrating how the basics of futures work.  First, consider the following code snippet that uses plain R code:</p>
 
 <pre><code class="r">&gt; v &lt;- {
-+   cat(&quot;Resolving...\n&quot;)
++   cat(&quot;Hello world!\n&quot;)
 +   3.14
 + }
-Resolving...
+Hello world!
 &gt; v
 [1] 3.14
 </code></pre>
@@ -227,25 +227,26 @@ Resolving...
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
 &gt; v %&lt;-% {
-+   cat(&quot;Resolving...\n&quot;)
++   cat(&quot;Hello world!\n&quot;)
 +   3.14
 + }
-Resolving...
 &gt; v
+Hello world!
 [1] 3.14
 </code></pre>
 
-<p>The difference is in how <code>v</code> is constructed; with plain R we use <code>&lt;-</code> whereas with futures we use <code>%&lt;-%</code>.</p>
+<p>The difference is in how <code>v</code> is constructed; with plain R we use <code>&lt;-</code> whereas with futures we use <code>%&lt;-%</code>.  The other difference is that output is relayed <em>after</em> the future is resolved (not during) and when the value is queried (see Vignette &#39;Outputting Text&#39;).</p>
 
 <p>So why are futures useful?  Because we can choose to evaluate the future expression in a separate R process asynchronously by simply switching settings as:</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
 &gt; plan(multiprocess)
 &gt; v %&lt;-% {
-+   cat(&quot;Resolving...\n&quot;)
++   cat(&quot;Hello world!\n&quot;)
 +   3.14
 + }
 &gt; v
+Hello world!
 [1] 3.14
 </code></pre>
 
@@ -260,11 +261,11 @@ in separate processes running in the background.  In other words, futures provid
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
 &gt; f &lt;- future({
-+   cat(&quot;Resolving...\n&quot;)
++   cat(&quot;Hello world!\n&quot;)
 +   3.14
 + })
-Resolving...
 &gt; v &lt;- value(f)
+Hello world!
 &gt; v
 [1] 3.14
 </code></pre>
@@ -346,7 +347,7 @@ Resolving...
 </tr>
 </tbody></table>
 
-<p>The future package is designed such that support for additional strategies can be implemented as well.  For instance, the <a href="https://cran.r-project.org/package=future.batchtools">future.batchtools</a> package provides futures for all types of <em>cluster functions</em> (&ldquo;backends&rdquo;) that the <a href="https://cran.r-project.org/package=batchtools">batchtools</a> package supports.  Specifically, futures for evaluating R expressions via job schedulers such as Slurm, TORQUE/PBS, Oracle/Sun Grid Engine (SGE) and Load Sharing Facility (LSF) are also available.  (<em>Comment</em>: The <a href="https://cran.r-project.org/package=future.BatchJobs">future.BatchJobs</a> package provides analogue backends based on the <a href="https://cran.r-project.org/package=BatchJobs">BatchJobs</a> package; however the BatchJobs developers have deprecated it in favor of batchtools.)</p>
+<p>The future package is designed such that support for additional strategies can be implemented as well.  For instance, the <a href="https://cran.r-project.org/package=future.callr">future.callr</a> package provides future backends that evaluates futures in a background R process utilizing the <a href="https://cran.r-project.org/package=callr">callr</a> package - they work similarly to <code>multisession</code> futures but has a few advantages.  Continuing, the <a href="https://cran.r-project.org/package=future.batchtools">future.batchtools</a> package provides futures for all types of <em>cluster functions</em> (&ldquo;backends&rdquo;) that the <a href="https://cran.r-project.org/package=batchtools">batchtools</a> package supports.  Specifically, futures for evaluating R expressions via job schedulers such as Slurm, TORQUE/PBS, Oracle/Sun Grid Engine (SGE) and Load Sharing Facility (LSF) are also available.  (<em>Comment</em>: The <a href="https://cran.r-project.org/package=future.BatchJobs">future.BatchJobs</a> package provides analogue backends based on the <a href="https://cran.r-project.org/package=BatchJobs">BatchJobs</a> package; however the BatchJobs developers have deprecated it in favor of batchtools.)</p>
 
 <p>By default, future expressions are evaluated eagerly (= instantaneously) and synchronously (in the current R session).  This evaluation strategy is referred to as &ldquo;sequential&rdquo;.  In this section, we will go through each of these strategies and discuss what they have in common and how they differ.</p>
 
@@ -394,26 +395,26 @@ Resolving...
 [1] 28518
 &gt; a %&lt;-% {
 +     pid &lt;- Sys.getpid()
-+     cat(&quot;Resolving &#39;a&#39; ...\n&quot;)
++     cat(&quot;Future &#39;a&#39; ...\n&quot;)
 +     3.14
 + }
-Resolving &#39;a&#39; ...
 &gt; b %&lt;-% {
-+     rm(pid)
-+     cat(&quot;Resolving &#39;b&#39; ...\n&quot;)
++     rm(pid)  ## no effect on global &#39;pid&#39;
++     cat(&quot;Future &#39;b&#39; ...\n&quot;)
 +     Sys.getpid()
 + }
-Resolving &#39;b&#39; ...
 &gt; c %&lt;-% {
-+     cat(&quot;Resolving &#39;c&#39; ...\n&quot;)
++     cat(&quot;Future &#39;c&#39; ...\n&quot;)
 +     2 * a
 + }
-Resolving &#39;c&#39; ...
 &gt; b
+Future &#39;b&#39; ...
 [1] 28518
 &gt; c
+Future &#39;c&#39; ...
 [1] 6.28
 &gt; a
+Future &#39;a&#39; ...
 [1] 3.14
 &gt; pid
 [1] 28518
@@ -439,29 +440,32 @@ Resolving &#39;c&#39; ...
 [1] 28518
 &gt; a %&lt;-% {
 +     pid &lt;- Sys.getpid()
-+     cat(&quot;Resolving &#39;a&#39; ...\n&quot;)
++     cat(&quot;Future &#39;a&#39; ...\n&quot;)
 +     3.14
 + }
 &gt; b %&lt;-% {
 +     rm(pid)
-+     cat(&quot;Resolving &#39;b&#39; ...\n&quot;)
++     cat(&quot;Future &#39;b&#39; ...\n&quot;)
 +     Sys.getpid()
 + }
 &gt; c %&lt;-% {
-+     cat(&quot;Resolving &#39;c&#39; ...\n&quot;)
++     cat(&quot;Future &#39;c&#39; ...\n&quot;)
 +     2 * a
 + }
 &gt; b
+Future &#39;b&#39; ...
 [1] 28539
 &gt; c
+Future &#39;c&#39; ...
 [1] 6.28
 &gt; a
+Future &#39;a&#39; ...
 [1] 3.14
 &gt; pid
 [1] 28518
 </code></pre>
 
-<p>The first thing we observe is that the values of <code>a</code>, <code>c</code> and <code>pid</code> are the same as previously.  However, we notice that <code>b</code> is different from before.  This is because future <code>b</code> is evaluated in a different R process and therefore it returns a different process ID.  Another difference is that the messages, generated by <code>cat()</code>, are no longer displayed.  This is because they are outputted to the background sessions and not the calling session.</p>
+<p>The first thing we observe is that the values of <code>a</code>, <code>c</code> and <code>pid</code> are the same as previously.  However, we notice that <code>b</code> is different from before.  This is because future <code>b</code> is evaluated in a different R process and therefore it returns a different process ID.</p>
 
 <p>When multisession evaluation is used, the package launches a set of R sessions in the background that will serve multisession futures by evaluating their expressions as they are created.  If all background sessions are busy serving other futures, the creation of the next multisession future is <em>blocked</em> until a background session becomes available again.  The total number of background processes launched is decided by the value of <code>availableCores()</code>, e.g.</p>
 
@@ -470,19 +474,18 @@ mc.cores
        2 
 </code></pre>
 
-<p>This particular result tells us that the <code>mc.cores</code> option was set such that we are allowed to use in total 2 processes including the main process.  In other words, with these settings, there will be 2 background processes serving the multisession futures.  The <code>availableCores()</code> is also agile to different options and system environment variables.  For instance, if compute cluster schedulers are used (e.g. TORQUE/PBS and Slurm), they set specific environment variable specifying the number of cores that was allotted to any given job; <code>availableCores()</code> acknowledges these as well.  If nothing else is specified, all available cores on the machine will be utilized, cf. <code>parallel::detectCores()</code>.  For more details, please see <code>help(&quot;availableCores&quot;, package = &quot;future&quot;)</code>.</p>
+<p>This particular result tells us that the <code>mc.cores</code> option was set such that we are allowed to use in total two (2) processes including the main process.  In other words, with these settings, there will be two (2) background processes serving the multisession futures.  The <code>availableCores()</code> is also agile to different options and system environment variables.  For instance, if compute cluster schedulers are used (e.g. TORQUE/PBS and Slurm), they set specific environment variable specifying the number of cores that was allotted to any given job; <code>availableCores()</code> acknowledges these as well.  If nothing else is specified, all available cores on the machine will be utilized, cf. <code>parallel::detectCores()</code>.  For more details, please see <code>help(&quot;availableCores&quot;, package = &quot;future&quot;)</code>.</p>
 
 <h4>Multicore Futures</h4>
 
-<p>On operating systems where R supports <em>forking</em> of processes, which is basically all operating system except Windows, an alternative to spawning R sessions in the background is to fork the existing R process.  Forking an R process is considered faster than working with a separate R session running in the background.  One reason is that the overhead of exporting large globals to the background session can be greater than when forking is used.
-To use multicore futures, we specify:</p>
+<p>On operating systems where R supports <em>forking</em> of processes, which is basically all operating system except Windows, an alternative to spawning R sessions in the background is to fork the existing R process.  To use multicore futures, we specify:</p>
 
 <pre><code class="r">plan(multicore)
 </code></pre>
 
-<p>The only real different between using multicore and multisession futures is that any output written (to standard output or standard error) by a multicore process is instantaneously outputted in calling process.  Other than this, the behavior of using multicore evaluation is very similar to that of using multisession evaluation.</p>
-
 <p>Just like for multisession futures, the maximum number of parallel processes running will be decided by <code>availableCores()</code>, since in both cases the evaluation is done on the local machine.</p>
+
+<p>Forking an R process can be faster than working with a separate R session running in the background.  One reason is that the overhead of exporting large globals to the background session can be greater than when forking, and therefore shared memory, is used.  On the other hand, the shared memory is <em>read only</em>, meaning any modifications to shared objects by one of the forked processes (&ldquo;workers&rdquo;) will cause a copy by the operating system.  This can also happen when the R garbage collector runs in one of the forked processes.</p>
 
 <h4>Multiprocess Futures</h4>
 
@@ -503,29 +506,30 @@ To use multicore futures, we specify:</p>
 [1] 28518
 &gt; a %&lt;-% {
 +     pid &lt;- Sys.getpid()
-+     cat(&quot;Resolving &#39;a&#39; ...\n&quot;)
++     cat(&quot;Future &#39;a&#39; ...\n&quot;)
 +     3.14
 + }
 &gt; b %&lt;-% {
 +     rm(pid)
-+     cat(&quot;Resolving &#39;b&#39; ...\n&quot;)
++     cat(&quot;Future &#39;b&#39; ...\n&quot;)
 +     Sys.getpid()
 + }
 &gt; c %&lt;-% {
-+     cat(&quot;Resolving &#39;c&#39; ...\n&quot;)
++     cat(&quot;Future &#39;c&#39; ...\n&quot;)
 +     2 * a
 + }
 &gt; b
+Future &#39;b&#39; ...
 [1] 28561
 &gt; c
+Future &#39;c&#39; ...
 [1] 6.28
 &gt; a
+Future &#39;a&#39; ...
 [1] 3.14
 &gt; pid
 [1] 28518
 </code></pre>
-
-<p>Just as for most other asynchronous evaluation strategies, the output from <code>cat()</code> is not displayed on the current/calling machine.</p>
 
 <p>Any types of clusters that <code>parallel::makeCluster()</code> creates can be used for cluster futures.  For instance, the above cluster can be explicitly set up as:</p>
 
@@ -547,17 +551,17 @@ Clusters created implicitly using <code>plan(cluster, workers = hosts)</code> wh
 <pre><code class="r">&gt; plan(multiprocess)
 &gt; pid &lt;- Sys.getpid()
 &gt; a %&lt;-% {
-+     cat(&quot;Resolving &#39;a&#39; ...\n&quot;)
++     cat(&quot;Future &#39;a&#39; ...\n&quot;)
 +     Sys.getpid()
 + }
 &gt; b %&lt;-% {
-+     cat(&quot;Resolving &#39;b&#39; ...\n&quot;)
++     cat(&quot;Future &#39;b&#39; ...\n&quot;)
 +     b1 %&lt;-% {
-+         cat(&quot;Resolving &#39;b1&#39; ...\n&quot;)
++         cat(&quot;Future &#39;b1&#39; ...\n&quot;)
 +         Sys.getpid()
 +     }
 +     b2 %&lt;-% {
-+         cat(&quot;Resolving &#39;b2&#39; ...\n&quot;)
++         cat(&quot;Future &#39;b2&#39; ...\n&quot;)
 +         Sys.getpid()
 +     }
 +     c(b.pid = Sys.getpid(), b1.pid = b1, b2.pid = b2)
@@ -565,8 +569,12 @@ Clusters created implicitly using <code>plan(cluster, workers = hosts)</code> wh
 &gt; pid
 [1] 28518
 &gt; a
+Future &#39;a&#39; ...
 [1] 28584
 &gt; b
+Future &#39;b&#39; ...
+Future &#39;b1&#39; ...
+Future &#39;b2&#39; ...
  b.pid b1.pid b2.pid 
  28585  28585  28585 
 </code></pre>
@@ -585,8 +593,12 @@ Clusters created implicitly using <code>plan(cluster, workers = hosts)</code> wh
 &gt; pid
 [1] 28518
 &gt; a
+Future &#39;a&#39; ...
 [1] 28586
 &gt; b
+Future &#39;b&#39; ...
+Future &#39;b1&#39; ...
+Future &#39;b2&#39; ...
  b.pid b1.pid b2.pid 
  28587  28587  28587 
 </code></pre>
@@ -597,13 +609,15 @@ Clusters created implicitly using <code>plan(cluster, workers = hosts)</code> wh
 
 <pre><code class="r">&gt; plan(list(sequential, multiprocess))
 [...]
-Resolving &#39;a&#39; ...
-Resolving &#39;b&#39; ...
 &gt; pid
 [1] 28518
 &gt; a
+Future &#39;a&#39; ...
 [1] 28518
 &gt; b
+Future &#39;b&#39; ...
+Future &#39;b1&#39; ...
+Future &#39;b2&#39; ...
  b.pid b1.pid b2.pid 
  28518  28588  28589 
 </code></pre>
@@ -618,8 +632,12 @@ Resolving &#39;b&#39; ...
 &gt; pid
 [1] 28518
 &gt; a
+Future &#39;a&#39; ...
 [1] 28590
 &gt; b
+Future &#39;b&#39; ...
+Future &#39;b1&#39; ...
+Future &#39;b2&#39; ...
  b.pid b1.pid b2.pid 
  28591  28592  28594 
 </code></pre>
@@ -632,13 +650,13 @@ Resolving &#39;b&#39; ...
 
 <p>It is possible to check whether a future has been resolved or not without blocking.  This can be done using the <code>resolved(f)</code> function, which takes an explicit future <code>f</code> as input.  If we work with implicit futures (as in all the examples above), we can use the <code>f &lt;- futureOf(a)</code> function to retrieve the explicit future from an implicit one.  For example,</p>
 
-<pre><code class="r">&gt; plan(multiprocess)
-&gt; a %&lt;-% {
-+     cat(&quot;Resolving &#39;a&#39; ...&quot;)
-+     Sys.sleep(2)
-+     cat(&quot;done\n&quot;)
-+     Sys.getpid()
-+ }
+<pre><code class="r"> plan(multiprocess)
+ a %&lt;-% {
+     cat(&quot;Future &#39;a&#39; ...&quot;)
+     Sys.sleep(2)
+     cat(&quot;done\n&quot;)
+     Sys.getpid()
+ }
 &gt; cat(&quot;Waiting for &#39;a&#39; to be resolved ...\n&quot;)
 Waiting for &#39;a&#39; to be resolved ...
 &gt; f &lt;- futureOf(a)
@@ -656,6 +674,7 @@ Waiting for &#39;a&#39; to be resolved ...
 &gt; cat(&quot;Waiting for &#39;a&#39; to be resolved ... DONE\n&quot;)
 Waiting for &#39;a&#39; to be resolved ... DONE
 &gt; a
+Future &#39;a&#39; ... done
 [1] 28595
 </code></pre>
 
@@ -666,19 +685,20 @@ Waiting for &#39;a&#39; to be resolved ... DONE
 <pre><code class="r">&gt; plan(sequential)
 &gt; b &lt;- &quot;hello&quot;
 &gt; a %&lt;-% {
-+     cat(&quot;Resolving &#39;a&#39; ...\n&quot;)
-+     log(b)
-+ } %lazy% TRUE
+     cat(&quot;Future &#39;a&#39; ...\n&quot;)
+     log(b)
+ } %lazy% TRUE
 &gt; cat(&quot;Everything is still ok although we have created a future that will fail.\n&quot;)
 Everything is still ok although we have created a future that will fail.
 &gt; a
-Resolving &#39;a&#39; ...
+Future &#39;a&#39; ...
 Error in log(b) : non-numeric argument to mathematical function
 </code></pre>
 
-<p>The error is thrown each time the value is requested, that is, if we try to get the value again will generate the same error:</p>
+<p>The error is thrown each time the value is requested, that is, if we try to get the value again will generate the same error (and output):</p>
 
 <pre><code class="r">&gt; a
+Future &#39;a&#39; ...
 Error in log(b) : non-numeric argument to mathematical function
 In addition: Warning message:
 restarting interrupted promise evaluation

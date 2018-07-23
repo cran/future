@@ -216,7 +216,7 @@ hr {
 
 <p>If a global variable is used in a future expression that <em>conditionally</em> overrides this global variable with a local one, the future framework fails to identify the global variable and therefore fails to export it, resulting in a run-time error.  For example, although this works:</p>
 
-<pre><code class="r">library(multisession)
+<pre><code class="r">plan(multisession)
 
 reset &lt;- TRUE
 x &lt;- 1
@@ -453,6 +453,51 @@ exported to external R processes.</p>
 Error in FALSE : 
   Detected a non-exportable reference (&#39;externalptr&#39;) in one of the globals
   (&#39;Double&#39; of class &#39;jclassName&#39;) used in the future expression
+</code></pre>
+
+<h3>Example: Non-exportable objects by the reticulate package</h3>
+
+<p>Analogously to rJava, the reticulate package provides methods for creating and calling Python code from within R.  If one attempt to use Python-binding objects from this package, we get errors like:</p>
+
+<pre><code class="r">&gt; library(&quot;future&quot;)
+&gt; plan(multisession)
+
+&gt; library(&quot;reticulate&quot;)
+&gt; os &lt;- import(&quot;os&quot;)
+&gt; pwd %&lt;-% os$getcwd()
+Error in eval(quote(os$getcwd()), new.env()) : 
+  attempt to apply non-function
+</code></pre>
+
+<p>and by telling the future package to validate globals further, we get:</p>
+
+<pre><code class="r">&gt; options(future.globals.onReference = &quot;error&quot;)
+&gt; pwd %&lt;-% os$getcwd()
+Error in FALSE : 
+  Detected a non-exportable reference (&#39;externalptr&#39;) in one of the globals
+  (&#39;os&#39; of class &#39;python.builtin.module&#39;) used in the future expression
+</code></pre>
+
+<p>Another reticulate example is when we try to use a Python function that we create ourselves as in:</p>
+
+<pre><code class="r">&gt; cat(&quot;def twice(x):\n    return 2*x\n&quot;, file = &quot;twice.py&quot;)
+&gt; source_python(&quot;twice.py&quot;)
+&gt; twice(1.2)
+[1] 2.4
+&gt; y %&lt;-% twice(1.2)
+&gt; y
+Error in unserialize(node$con) : 
+  Failed to retrieve the value of MultisessionFuture from cluster node #1
+  (on &#39;localhost&#39;).  The reason reported was &#39;error reading from connection&#39;
+</code></pre>
+
+<p>which, again, is because:</p>
+
+<pre><code class="r">&gt; options(future.globals.onReference = &quot;error&quot;)
+&gt; y %&lt;-% twice(1.2)
+Error in FALSE : 
+  Detected a non-exportable reference (&#39;externalptr&#39;) in one of the globals
+  (&#39;twice&#39; of class &#39;python.builtin.function&#39;) used in the future expression
 </code></pre>
 
 <h3>Example: Non-exportable objects by the rlang package</h3>
