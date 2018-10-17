@@ -1,7 +1,7 @@
 Package: future
-Version: 1.9.0
+Version: 1.10.0
 Title: Unified Parallel and Distributed Processing in R for Everyone
-Imports: digest, globals (>= 0.12.0), listenv (>= 0.7.0), parallel,
+Imports: digest, globals (>= 0.12.1), listenv (>= 0.7.0), parallel,
         utils
 Suggests: R.rsp, markdown
 VignetteBuilder: R.rsp
@@ -25,12 +25,13 @@ Description: The purpose of this package is to provide a lightweight and
     straightforward to tweak existing code to make use of futures.
 License: LGPL (>= 2.1)
 LazyLoad: TRUE
+ByteCompile: TRUE
 URL: https://github.com/HenrikBengtsson/future
 BugReports: https://github.com/HenrikBengtsson/future/issues
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 NeedsCompilation: no
-Packaged: 2018-07-22 16:04:34 UTC; hb
+Packaged: 2018-10-17 01:49:57 UTC; hb
 Author: Henrik Bengtsson [aut, cre, cph]
 Maintainer: Henrik Bengtsson <henrikb@braju.com>
 Repository: CRAN
-Date/Publication: 2018-07-23 08:00:03 UTC
+Date/Publication: 2018-10-17 08:20:02 UTC
