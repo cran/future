@@ -377,9 +377,21 @@ Error in FALSE :
 (&#39;xml&#39; of class &#39;xml_document&#39;) used in the future expression
 </code></pre>
 
+<h3>Example: Non-exportable objects by the DBI package</h3>
+
+<p>A third example are DBIConnection S4 objects as defined by the DBI package.  DBI provides a unified database interface for communication between R and various database engines.  Analogously to regular connections in R, DBIConnection can <em>not</em> safely be exported to another R process, e.g.</p>
+
+<pre><code class="r">&gt; library(future)
+&gt; options(future.globals.onReference = &quot;error&quot;)
+&gt; con &lt;- dbConnect(RSQLite::SQLite(), &quot;:memory:&quot;)
+&gt; dummy %&lt;-% print(con)
+Error in FALSE : 
+  Detected a non-exportable reference (&#39;externalptr&#39;) in one of the globals (&#39;con&#39; of class &#39;SQLiteConnection&#39;) used in the future expression
+</code></pre>
+
 <h3>Example: Non-exportable objects by the Rcpp package</h3>
 
-<p>A third example is Rcpp which allow us to easily create R functions that are implemented in C++, e.g.</p>
+<p>Another example is Rcpp which allow us to easily create R functions that are implemented in C++, e.g.</p>
 
 <pre><code class="r">Rcpp::sourceCpp(code = &quot;
 #include &lt;Rcpp.h&gt;
@@ -707,7 +719,7 @@ Undefined global functions or variables:
 
 <hr/>
 
-<p>Copyright Henrik Bengtsson, 2015-2018</p>
+<p>Copyright Henrik Bengtsson, 2015-2019</p>
 
 </body>
 

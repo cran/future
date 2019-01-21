@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
-<title>A Future for R: Outputting Text</title>
+<title>A Future for R: Text and Message Output</title>
 
 <script type="text/javascript">
 window.onload = function() {
@@ -196,17 +196,17 @@ hr {
 }
 </style>
 
-<meta name="keywords" content="R, package, vignette, future, promise, output, standard output, standard error, stdout, stderr">
+<meta name="keywords" content="R, package, vignette, future, promise, output, standard output, stdout, standard error, stderr, message, condition">
 <meta name="author" content="Henrik Bengtsson">
 
 </head>
 
 <body>
-<h1>A Future for R: Outputting Text</h1>
+<h1>A Future for R: Text and Message Output</h1>
 
-<p>Futures will <em>relay</em> output produced by functions such as <code>cat()</code>, <code>print()</code> and <code>str()</code>.  More specifically, output sent to the standard output (stdout) while a future is evaluated will be captured and <em>re-outputted when the value of the future is queried</em>.  Importantly, this works identically regardless of future backend used.</p>
+<p>Futures will <em>relay</em> output produced by functions such as <code>cat()</code>, <code>print()</code> and <code>str()</code>.  More specifically, output sent to the standard output (stdout) while a future is evaluated will be captured and <em>re-outputted (&ldquo;relayed&rdquo;) when the value of the future is queried</em>.  Messages produced by <code>message()</code>, which formally are R conditions are also captured and resignaled (&ldquo;relayed&rdquo;) as messages in the main R session.  Importantly, this works identically regardless of future backend used.</p>
 
-<p>For example,</p>
+<p>For simplicitly, lets start with an illustration on how standard output (&ldquo;stdout&rdquo;) is captured and relayed:</p>
 
 <pre><code class="r">&gt; library(future)
 &gt; plan(multiprocess)
@@ -237,7 +237,7 @@ Hello world!
  Max.   :7.900   Max.   :4.400   Max.   :6.900   Max.   :2.500
 </code></pre>
 
-<p>Note that the output will be relayed <em>each</em> time <code>value()</code> is called, e.g.</p>
+<p>Note that the captured standard output (stdout) will be relayed <em>each</em> time <code>value()</code> is called, e.g.</p>
 
 <pre><code class="r">&gt; a &lt;- value(fa)
 Hello world!
@@ -284,6 +284,29 @@ Hello world!
 [1] 42
 </code></pre>
 
+<p>Next, lets see what happens if we use <code>message()</code> to produce output:</p>
+
+<pre><code class="r">&gt; library(future)
+&gt; plan(multiprocess)
+&gt; fa &lt;- future({ message(&quot;Hello world!&quot;); 42L })
+&gt; value(fa)
+Hello world!
+[1] 42
+</code></pre>
+
+<p>Note that contrary to the captured stdout, which is captured as one single block output, messages are conditions that are captured separately.  Unfortunately, it is <em>not</em> possible to preserve the ordering of interweaved stdout and message output.  When using futures, stdout output will always be relayed first followed by each of the individual conditions captured.  For example,</p>
+
+<pre><code class="r">&gt; library(future)
+&gt; plan(multiprocess)
+&gt; fa &lt;- future({ message(&quot;Hello&quot;); print(1:3); message(&quot;world!&quot;); cat(&quot;ping\n&quot;); 42L })
+&gt; value(fa)
+[1] 1 2 3   ## &lt;= stdout as a single ...
+ping        ## &lt;= ... block of output
+Hello       ## &lt;= 1st message
+world!      ## &lt;= 2nd message
+[1] 42
+</code></pre>
+
 <h2>Future frontends</h2>
 
 <p>The output is relayed automatically also when using frontends such as <a href="https://cran.r-project.org/package=future.apply">future.apply</a> or <a href="https://cran.r-project.org/package=foreach">foreach</a> with <a href="https://cran.r-project.org/package=doFuture">doFuture</a>.  Again, it works with any future backend.  For example,</p>
@@ -291,10 +314,13 @@ Hello world!
 <pre><code class="r">&gt; library(future.apply)
 &gt; plan(future.callr::callr)
 
-&gt; y &lt;- lapply(1:3, FUN = function(x) { cat(&quot;x =&quot;, x, &quot;\n&quot;); sqrt(x) })
+&gt; y &lt;- future_lapply(1:3, FUN = function(x) { cat(&quot;x =&quot;, x, &quot;\n&quot;); message(&quot;x : &quot;, x); sqrt(x) })
 x = 1 
 x = 2 
-x = 3
+x = 3 
+x : 1  ## &lt;= 1st message
+x : 2  ## &lt;= 2nd message
+x : 3  ## &lt;= 3rd message
 
 &gt; str(y)
 List of 3
@@ -309,10 +335,13 @@ List of 3
 &gt; registerDoFuture()
 &gt; plan(future.callr::callr)
 
-&gt; y &lt;- foreach(x = 1:3) %dopar% { cat(&quot;x =&quot;, x, &quot;\n&quot;); sqrt(x) })
+&gt; y &lt;- foreach(x = 1:3) %dopar% { cat(&quot;x =&quot;, x, &quot;\n&quot;);  message(&quot;x : &quot;, x); sqrt(x) }
 x = 1 
 x = 2 
 x = 3
+x : 1  ## &lt;= 1st message
+x : 2  ## &lt;= 2nd message
+x : 3  ## &lt;= 3rd message
 
 &gt; str(y)
 List of 3
@@ -334,13 +363,25 @@ List of 3
 [1] 42
 </code></pre>
 
+<h2>Supressing messages</h2>
+
+<pre><code class="r">&gt; library(future)
+&gt; plan(multiprocess)
+&gt; fa &lt;- future({ message(&quot;Hello&quot;); print(1:3); message(&quot;world!&quot;); cat(&quot;ping\n&quot;); 42L })
+&gt; suppressMessages(a &lt;- value(fa))
+[1] 1 2 3
+ping
+&gt; a
+[1] 42
+</code></pre>
+
 <h2>Known limitations</h2>
 
-<p>It is only the standard output that is relayed.  It is <em>not possible</em> to relay output send to the standard error (stderr), i.e. output by <code>message()</code>, <code>cat(..., file = stderr())</code>, etc. will be lost.  This is due to a <a href="https://github.com/HenrikBengtsson/Wishlist-for-R/issues/55">limitation in R</a>, preventing us from capturing stderr in a reliable way, particularity across all backends.</p>
+<p>It is only the standard output that is relayed.  It is <em>not possible</em> to relay output send to the standard error (stderr), e.g. output by <code>cat(..., file = stderr())</code> will be lost.  This is due to a <a href="https://github.com/HenrikBengtsson/Wishlist-for-R/issues/55">limitation in R</a>, preventing us from capturing stderr in a reliable way, particularity across all backends.  However, note that the captured messages by <code>message()</code> are outputted to stderr (as expected) when resignalled/relayed.</p>
 
 <hr/>
 
-<p>Copyright Henrik Bengtsson, 2018</p>
+<p>Copyright Henrik Bengtsson, 2018-2019</p>
 
 </body>
 
