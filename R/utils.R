@@ -1,3 +1,7 @@
+isFALSE <- function(x) {
+  is.logical(x) && length(x) == 1L && !is.na(x) && !x
+}
+
 assert_no_positional_args_but_first <- function(call = sys.call(sys.parent())) {
   ast <- as.list(call)
   if (length(ast) <= 2L) return()
@@ -1003,7 +1007,16 @@ pid_exists <- local({
           str(out)
         }
         out <- strsplit(out, split = "[ ]+", fixed = FALSE)
-        out <- lapply(out, FUN = function(x) x[2])
+	## WORKAROUND: The 'Image Name' column may contain spaces, making
+	## it hard to locate the second column.  Instead, we will identify
+	## the most common number of column (typically six) and the count
+	## how many columns we should drop at the end in order to find the
+	## second as the last
+	## 
+	n <- lengths(out)
+        n <- sort(n)[round(length(n) / 2)] ## "median" without using 'stats'
+        drop <- n - 2L
+        out <- lapply(out, FUN = function(x) rev(x)[-seq_len(drop)][1])
         out <- unlist(out, use.names = FALSE)
         if (debug) {
           cat("Extracted: ", paste(sQuote(out), collapse = ", "), "\n", sep = "")
@@ -1034,6 +1047,8 @@ pid_exists <- local({
     ## Does a working pid_check() exist?
     if (!is.null(pid_check)) return(pid_check(pid, debug = debug))
 
+    if (debug) message("Attempting to find a working pid_exists_*() function ...")
+    
     ## Try to find a working pid_check() function, i.e. one where
     ## pid_check(Sys.getpid()) == TRUE
     if (os == "unix") {  ## Unix, Linux, and macOS
@@ -1051,16 +1066,85 @@ pid_exists <- local({
     }
 
     if (is.null(pid_check)) {
+      if (debug) message("- failed; pid_check() will always return NA")
       ## Default to NA
       pid_check <- function(pid) NA
     } else {
       ## Sanity check
       stop_if_not(isTRUE(pid_check(Sys.getpid(), debug = debug)))
+      if (debug) message("- success")
     }
 
     ## Record
     cache$pid_check <- pid_check
-    
+
+    if (debug) message("Attempting to find a working pid_exists_*() function ... done")
+
     pid_check(pid)
   }
 })
+
+
+#' @importFrom tools pskill
+pid_kill <- function(pid, wait = 0.5, timeout = 30, debug = TRUE) {
+  pid <- as.integer(pid)
+  stop_if_not(length(pid), !is.na(pid), pid >= 0L)
+
+  setTimeLimit(elapsed = timeout)
+  on.exit(setTimeLimit(elapsed = Inf))
+
+  tryCatch({
+    ## Always try to kill, because pid_exists() can be very slow on Windows
+    pskill(pid)
+  
+    ## Wait a bit before checking whether process was successfully
+    ## killed or not
+    Sys.sleep(wait)
+
+    ## WARNING: pid_exists() can be very slow on Windows
+    !isTRUE(pid_exists(pid))
+  }, error = function(ex) NA)
+}
+
+
+## From R.utils 2.7.0 (2018-08-26)
+queryRCmdCheck <- function(...) {
+  evidences <- list()
+
+  # Command line arguments
+  args <- commandArgs()
+  evidences[["vanilla"]] <- is.element("--vanilla", args)
+
+  # Check the working directory
+  pwd <- getwd()
+  dirname <- basename(pwd)
+  parent <- basename(dirname(pwd))
+  pattern <- ".+[.]Rcheck$"
+
+  # Is 'R CMD check' checking tests?
+  evidences[["tests"]] <- (
+    (regexpr(pattern, parent) != -1) && 
+    (regexpr("^tests(|_.*)$", dirname) != -1)
+  )
+
+  # Is the current working directory as expected?
+  evidences[["pwd"]] <- (evidences[["tests"]] || (regexpr(pattern, dirname) != -1))
+
+  # Is 'R CMD check' checking examples?
+  evidences[["examples"]] <- is.element("CheckExEnv", search())
+
+
+  if (!evidences$vanilla || !evidences$pwd) {
+    res <- "notRunning"
+  } else if (evidences$tests) {
+    res <- "checkingTests"
+  } else if (evidences$examples) {
+    res <- "checkingExamples"
+  } else {
+    res <- "notRunning"
+  }
+
+  res
+}
+
+inRCmdCheck <- function() { queryRCmdCheck() != "notRunning" }

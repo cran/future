@@ -335,8 +335,9 @@ makeClusterPSOCK <- function(workers, makeNode = makeNodePSOCK, port = c("auto",
 #' trying to access the connection.
 #'
 #' @rdname makeClusterPSOCK
+#' @importFrom tools pskill
 #' @export
-makeNodePSOCK <- function(worker = "localhost", master = NULL, port, connectTimeout = getOption("future.makeNodePSOCK.connectTimeout", 2 * 60), timeout = getOption("future.makeNodePSOCK.timeout", 30 * 24 * 60 * 60), rscript = NULL, homogeneous = NULL, rscript_args = NULL, methods = TRUE, useXDR = TRUE, outfile = "/dev/null", renice = NA_integer_, rshcmd = getOption("future.makeNodePSOCK.rshcmd", NULL), user = NULL, revtunnel = TRUE, rshlogfile = NULL, rshopts = getOption("future.makeNodePSOCK.rshopts", NULL), rank = 1L, manual = FALSE, dryrun = FALSE, verbose = FALSE) {
+makeNodePSOCK <- function(worker = "localhost", master = NULL, port, connectTimeout = getOption("future.makeNodePSOCK.connectTimeout", as.numeric(Sys.getenv("R_FUTURE_MAKENODEPSOCK_CONNECTTIMEOUT", 2 * 60))), timeout = getOption("future.makeNodePSOCK.timeout", as.numeric(Sys.getenv("R_FUTURE_MAKENODEPSOCK_TIMEOUT", 30 * 24 * 60 * 60))), rscript = NULL, homogeneous = NULL, rscript_args = NULL, methods = TRUE, useXDR = TRUE, outfile = "/dev/null", renice = NA_integer_, rshcmd = getOption("future.makeNodePSOCK.rshcmd", Sys.getenv("R_FUTURE_MAKENODEPSOCK_RSHCMD")), user = NULL, revtunnel = TRUE, rshlogfile = NULL, rshopts = getOption("future.makeNodePSOCK.rshopts", Sys.getenv("R_FUTURE_MAKENODEPSOCK_RSHOPTS")), rank = 1L, manual = FALSE, dryrun = FALSE, verbose = FALSE) {
   localMachine <- is.element(worker, c("localhost", "127.0.0.1"))
 
   ## Could it be that the worker specifies the name of the localhost?
@@ -354,11 +355,13 @@ makeNodePSOCK <- function(worker = "localhost", master = NULL, port, connectTime
   stop_if_not(length(dryrun) == 1L, !is.na(dryrun))
   
   ## Locate a default SSH client?
+  if (identical(rshcmd, "")) rshcmd <- NULL
   if (!is.null(rshcmd)) {
     rshcmd <- as.character(rshcmd)
     stop_if_not(length(rshcmd) >= 1L)
   }
 
+  if (identical(rshopts, "")) rshopts <- NULL
   rshopts <- as.character(rshopts)
   
   user <- as.character(user)
@@ -446,6 +449,40 @@ makeNodePSOCK <- function(worker = "localhost", master = NULL, port, connectTime
     rscript_args <- c(rscript_args, "-e", shQuote("parallel:::.slaveRSOCK()"))
   }
   
+  ## Launching a process on the local machine?
+  pidfile <- NULL
+  if (localMachine && !dryrun) {
+    autoKill <- isTRUE(getOption("future.makeNodePSOCK.autoKill", as.logical(Sys.getenv("R_FUTURE_MAKENODEPSOCK_AUTOKILL", TRUE))))
+    if (autoKill) {
+      pidfile <- tempfile(pattern = sprintf("future.parent=%d.", Sys.getpid()), fileext = ".pid")
+      pidfile <- normalizePath(pidfile, winslash = "/", mustWork = FALSE)
+      pidcode <- sprintf('try(cat(Sys.getpid(),file="%s"))', pidfile)
+      rscript_pid_args <- c("-e", shQuote(pidcode))
+      ## Check if this approach to infer the PID works
+      test_cmd <- paste(rscript, paste(c(rscript_pid_args, "-e", 42), collapse = " "))
+      res <- system(test_cmd, wait = TRUE, intern = TRUE)
+      file.remove(pidfile)
+      
+      status <- attr(res, "status")
+      if ((is.null(status) || status == 0L) && any(grepl("42", res))) {
+        rscript_args <- c(rscript_pid_args, rscript_args)
+      } else {
+        pidfile <- NULL
+      }
+    }
+  }
+
+  ## Add Rscript "label"?
+  rscript_label <- getOption("future.makeNodePSOCK.rscript_label", Sys.getenv("R_FUTURE_MAKENODEPSOCK_RSCRIPT_LABEL"))
+  if (!is.null(rscript_label) && nzchar(rscript_label) && !isFALSE(as.logical(rscript_label))) {
+    if (isTRUE(as.logical(rscript_label))) {
+      script <- grep("[.]R$", commandArgs(), value = TRUE)[1]
+      if (is.na(script)) script <- "UNKNOWN"
+      rscript_label <- sprintf("%s:%s:%s:%s", script, Sys.getpid(), Sys.info()[["nodename"]], Sys.info()[["user"]])
+    }
+    rscript_args <- c("-e", shQuote(paste0("#label=", rscript_label)), rscript_args)
+  }
+
   if (methods) {
     rscript_args <- c("--default-packages=datasets,utils,grDevices,graphics,stats,methods", rscript_args)
   }
@@ -518,7 +555,7 @@ makeNodePSOCK <- function(worker = "localhost", master = NULL, port, connectTime
          if (!is.null(ver) && ver <= "10.0.17763.253") {
            msg <- sprintf("WARNING: You're running Windows 10 (build %s) where this 'rshcmd' (%s) may not support reverse tunneling (revtunnel = TRUE) resulting in worker failing to launch", ver, paste(sQuote(rshcmd), collapse = ", "), rshcmd_label)
            if (verbose) message(c(verbose_prefix, msg))
-	 }
+         }
       }
     }
     
@@ -579,7 +616,8 @@ makeNodePSOCK <- function(worker = "localhost", master = NULL, port, connectTime
       }
     }
   }
-    
+
+
   con <- local({
      ## Apply connection time limit "only to the rest of the current computation".
      ## NOTE: Regardless of transient = TRUE / FALSE, it still seems we need to
@@ -599,6 +637,8 @@ makeNodePSOCK <- function(worker = "localhost", master = NULL, port, connectTime
          warnings <<- c(warnings, list(w))
        })
      }, error = function(ex) {
+       setTimeLimit(elapsed = Inf)
+       
        ## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
        ## Post-mortem analysis
        ## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -631,6 +671,24 @@ makeNodePSOCK <- function(worker = "localhost", master = NULL, port, connectTime
 
        ## Report on how the worker was launched
        msg <- c(msg, sprintf(" * Worker launch call: %s.\n", local_cmd))
+
+       ## Do we know the PID of the worker? If so, try to kill it to avoid
+       ## leaving a stray process behind
+       ## Comment: readWorkerPID() must be done *after* socketConnection()
+       ## on R 3.4.4, otherwise socketConnection() will fail. Not sure why.
+       ## /HB 2019-01-24
+       pid <- readWorkerPID(pidfile)
+       if (!is.null(pid)) {
+         if (verbose) message(sprintf("Killing worker process (PID %d) if still alive", pid))
+	 ## WARNING: pid_kill() calls pid_exists() [twice] and on Windows
+	 ## pid_exists() uses system('tasklist') which can be very very slow
+	 ## /HB 2019-01-24
+         success <- pid_kill(pid)
+         if (verbose) message(sprintf("Worker (PID %d) was successfully killed: %s", pid, success))
+         msg <- c(msg, sprintf(" * Worker (PID %d) was successfully killed: %s\n", pid, success))
+       } else if (localMachine) {
+         msg <- c(msg, sprintf(" * Failed to kill local worker because it's PID is could not be identified.\n"))
+       }
 
        ## Propose further troubleshooting methods
        suggestions <- NULL
@@ -688,6 +746,7 @@ makeNodePSOCK <- function(worker = "localhost", master = NULL, port, connectTime
        })
      })
   })
+  setTimeLimit(elapsed = Inf)
 
   if (verbose) {
     message(sprintf("%sConnection with worker #%s on %s established", verbose_prefix, rank, sQuote(worker)))
@@ -889,15 +948,29 @@ find_rshcmd <- function(which = NULL, first = FALSE, must_work = TRUE) {
 }
 
 
-session_info <- function() {
-  list(
+#' @importFrom utils installed.packages
+session_info <- function(pkgs = getOption("future.makeNodePSOCK.sessionInfo.pkgs", as.logical(Sys.getenv("R_FUTURE_MAKENODEPSOCK_SESSIONINFO_PKGS", FALSE)))) {
+  libs <- .libPaths()
+  info <- list(
     r = c(R.version, os.type = .Platform$OS.type),
     system = as.list(Sys.info()),
-    process = list(pid = Sys.getpid()) 
+    libs = libs,
+    pkgs = if (isTRUE(pkgs)) {
+      structure(lapply(libs, FUN = function(lib.loc) {
+        pkgs <- installed.packages(lib.loc = lib.loc)
+        if (length(pkgs) == 0) return(NULL)
+        paste0(pkgs[, "Package"], "_", pkgs[, "Version"])
+      }), names = libs)
+    },
+    pwd = getwd(),
+    process = list(pid = Sys.getpid())
   )
+  info
 }
 
 
+#' @importFrom utils capture.output
+#' @importFrom parallel clusterCall
 add_cluster_session_info <- function(cl) {
   stop_if_not(inherits(cl, "cluster"))
   
@@ -935,14 +1008,13 @@ add_cluster_session_info <- function(cl) {
 #'
 #' @return The cluster object with attribute \code{gcMe} set.
 #'
-#' @importFrom parallel stopCluster
-#' @importFrom utils capture.output
-#'
 #' @seealso
 #' The cluster is stopped using
 #' \code{\link[parallel:stopCluster]{stopCluster}(cl)}).
 #'
 #' @keywords internal
+#' @importFrom parallel stopCluster
+#' @importFrom utils capture.output
 #' @export
 autoStopCluster <- function(cl, debug = FALSE) {
   stop_if_not(inherits(cl, "cluster"))
@@ -984,3 +1056,46 @@ windows_build_version <- local({
     }, error = function(ex) NULL)
   }
 })
+
+
+readWorkerPID <- function(pidfile, wait = 0.5, maxTries = 8L, verbose = FALSE) {
+  if (is.null(pidfile)) return(NULL)
+  
+  if (verbose) message("Attempting to infer PID for worker process ...")
+  pid <- NULL
+  
+  ## Wait for PID file
+  tries <- 0L
+  while (!file.exists(pidfile) && tries <= maxTries) {
+    Sys.sleep(wait)
+    tries <- tries + 1L
+  }
+  
+  if (file.exists(pidfile)) {
+    pid0 <- NULL
+    for (tries in 1:maxTries) {
+      pid0 <- tryCatch(readLines(pidfile, warn = FALSE), error = identity)
+      if (!inherits(pid0, "error")) break
+      pid0 <- NULL
+      Sys.sleep(wait)
+    }
+    file.remove(pidfile)
+    
+    if (length(pid0) > 0L) {
+      ## Use last one, if more than one ("should not happend")
+      pid <- as.integer(pid0[length(pid0)])
+      if (verbose) message(" - pid: ", pid)
+      if (is.na(pid)) {
+        warning(sprintf("Worker PID is a non-integer: %s", pid0))
+        pid <- NULL
+      } else if (pid == Sys.getpid()) {
+        warning(sprintf("Hmm... worker PID and parent PID are the same: %s", pid))
+        pid <- NULL
+      }	
+    }
+  }
+ 
+  if (verbose) message("Attempting to infer PID for worker process ... done")
+  
+  pid
+} ## readWorkerPID()

@@ -190,15 +190,15 @@ plan <- local({
     ## Skip if already set?
     if (skip && equal_strategy_stacks(newStack, oldStack)) {
       if (getOption("future.debug", FALSE)) {
-        mdebug(sprintf("plan(): Skip setting new future strategy stack because it is the same as the current one:\n%s\n", 
-               paste(capture.output(print(newStack)), collapse = "\n")))
+        mdebug(paste0("plan(): Skip setting new future strategy stack because it is the same as the current one:\n", 
+               paste(capture.output(print(newStack)), collapse = "\n"), "\n"))
       }
       return(oldStack)
     }
 
     if (getOption("future.debug", FALSE)) {
-      mdebug(sprintf("plan(): Setting new future strategy stack:\n%s\n", 
-             paste(capture.output(print(newStack)), collapse = "\n")))
+      mdebug(paste0("plan(): Setting new future strategy stack:\n", 
+             paste(capture.output(print(newStack)), collapse = "\n"), "\n"))
     }
     
     stack <<- newStack
@@ -367,12 +367,28 @@ supportedStrategies <- function(strategies = c("sequential", "multicore",
 }
 
 
+#' @importFrom utils capture.output
 #' @export
 print.future <- function(x, ...) {
   class <- setdiff(class(x), c("FutureStrategy", "tweaked", "function"))
   s <- sprintf("%s:", class[1])
   specs <- list()
-  args <- deparse(args(x), width.cutoff = 500L)
+  args <- args(x)
+
+  ## Simplify the value on the 'workers' argument?
+  formals <- formals(args)
+  if (!is.atomic(formals$workers) && !is.language(formals$workers)) {
+    bfr <- capture.output(print(formals$workers))
+    if (length(bfr) > 6L) {
+      bfr2 <- capture.output(str(formals$workers))
+      if (length(bfr2) < length(bfr)) bfr <- bfr2
+      if (length(bfr) > 6L) bfr <- c(bfr[1:6], "...")
+    }
+    formals$workers <- paste0("<", paste(bfr, collapse = "; "), ">")
+    formals(args) <- formals
+  }
+
+  args <- deparse(args, width.cutoff = 500L)
   args <- args[-length(args)]
   args <- gsub("(^[ ]+|[ ]+$)", "", args)
   args <- paste(args, collapse = " ")
@@ -381,7 +397,7 @@ print.future <- function(x, ...) {
   specs$call <- paste(deparse(attr(x, "call", exact = TRUE), 
                               width.cutoff = 500L),
                       collapse="")
-  specs <- sprintf("- %s: %s", names(specs), unlist(specs))
+  specs <- paste0("- ", names(specs), ": ", unlist(specs))
   s <- c(s, specs)
   s <- paste(s, collapse = "\n")
   cat(s, "\n", sep = "")
@@ -392,6 +408,7 @@ print.future <- function(x, ...) {
 print.FutureStrategy <- print.future
 
 
+#' @importFrom utils capture.output
 #' @export
 print.FutureStrategyList <- function(x, ...) {
   s <- "List of future strategies:"
@@ -401,7 +418,23 @@ print.FutureStrategyList <- function(x, ...) {
     class <- setdiff(class(x_kk), c("tweaked", "function"))
     s_kk <- sprintf("%d. %s:", kk, class[1])
     specs <- list()
-    args <- deparse(args(x_kk), width.cutoff = 500L)
+
+    args <- args(x_kk)
+
+    ## Simplify the value on the 'workers' argument?
+    formals <- formals(args)
+    if (!is.atomic(formals$workers) && !is.language(formals$workers)) {
+      bfr <- capture.output(print(formals$workers))
+      if (length(bfr) > 6L) {
+        bfr2 <- capture.output(str(formals$workers))
+        if (length(bfr2) < length(bfr)) bfr <- bfr2
+        if (length(bfr) > 6L) bfr <- c(bfr[1:6], "...")
+      }
+      formals$workers <- paste0("<", paste(bfr, collapse = "; "), ">")
+      formals(args) <- formals
+    }
+
+    args <- deparse(args, width.cutoff = 500L)
     args <- args[-length(args)]
     args <- gsub("(^[ ]+|[ ]+$)", "", args)
     args <- paste(args, collapse = " ")
@@ -410,7 +443,7 @@ print.FutureStrategyList <- function(x, ...) {
     specs$call <- paste(deparse(attr(x_kk, "call", exact = TRUE), 
                                 width.cutoff = 500L),
                         collapse = "")
-    specs <- sprintf("   - %s: %s", names(specs), unlist(specs))
+    specs <- paste0("   - ", names(specs), ": ", unlist(specs))
     s <- c(s, s_kk, specs)
   }
 

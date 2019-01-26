@@ -14,15 +14,22 @@ oopts <- options(
   ## Reset the following during testing in case
   ## they are set on the test system
   future.availableCores.system = NULL,
-  future.availableCores.fallback = NULL,
-  ## To be nicer to test environments (e.g. CRAN, Travis CI, AppVeyor CI, ...),
-  ## timeout much earlier than the default 30 days.  This will also give a more
-  ## informative error message produced by R itself, rather than whatever the
-  ## test environment produces.
-  future.makeNodePSOCK.timeout = 2 * 60, ## 2 minutes
-  future.wait.interval = 0.01 ## 0.01s (instead of default 0.2s)
+  future.availableCores.fallback = NULL
 )
 
+## Comment: The below should be set automatically whenever the future package
+## is loaded and 'R CMD check' runs.  The below is added in case R is changed
+## in the future and we fail to detect 'R CMD check'.
+Sys.setenv(R_FUTURE_MAKENODEPSOCK_CONNECTTIMEOUT = 2 * 60)
+Sys.setenv(R_FUTURE_MAKENODEPSOCK_TIMEOUT = 2 * 60)
+Sys.setenv(R_FUTURE_WAIT_INTERVAL = 0.01) ## 0.01s (instead of default 0.2s)
+Sys.setenv(R_FUTURE_MAKENODEPSOCK_SESSIONINFO_PKGS = TRUE)
+
+## Label PSOCK cluster workers (to help troubleshooting)
+test_script <- grep("[.]R$", commandArgs(), value = TRUE)[1]
+if (is.na(test_script)) test_script <- "UNKNOWN"
+worker_label <- sprintf("future/tests/%s:%s:%s:%s", test_script, Sys.info()[["nodename"]], Sys.info()[["user"]], Sys.getpid())
+Sys.setenv(R_FUTURE_MAKENODEPSOCK_RSCRIPT_LABEL = worker_label)
 
 ## Reset the following during testing in case
 ## they are set on the test system
@@ -42,6 +49,9 @@ oplan <- future::plan()
 ## Use eager futures by default
 future::plan("sequential")
 
+fullTest <- (Sys.getenv("_R_CHECK_FULL_") != "")
+isWin32 <- (.Platform$OS.type == "windows" && .Platform$r_arch == "i386")
+
 ## Private future functions
 .onLoad <- future:::.onLoad
 .onAttach <- future:::.onAttach
@@ -55,6 +65,7 @@ get_future <- future:::get_future
 geval <- future:::geval
 grmall <- future:::grmall
 hpaste <- future:::hpaste
+inRCmdCheck <- future:::inRCmdCheck
 importParallel <- future:::importParallel
 mdebug <- future:::mdebug
 myExternalIP <- future:::myExternalIP

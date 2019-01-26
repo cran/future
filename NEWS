@@ -1,6 +1,51 @@
 Package: future
 ===============
 
+Version: 1.11.1.1 [2019-01-25]
+
+BUG FIXES:
+
+ * When makeClusterPSOCK() fails to connect to a worker, it produces an error
+   with detailed information on what could have happend.  In rare cases,
+   another error could be produced when generating the information on what
+   the workers PID is.
+ 
+
+Version: 1.11.1 [2019-01-25]
+
+NEW FEATURES:
+
+ * The defaults of several arguments of makeClusterPSOCK() and makeNodePSOCK()
+   can now be controlled via environment variables in addition to R options
+   that was supported in the past. An advantage of using environment variables
+   is that they will be inherited by child processes, also nested ones.
+
+ * The printing of future plans is now less verbose when the 'workers' argument
+   is a complex object such as a PSOCK cluster object.  Previously, the output
+   would include verbose output of attributes etc.
+
+SOFTWARE QUALITY:
+
+ * TESTS: When the 'future' package is loaded, it checks whether 'R CMD check'
+   is running or not.  If it is, then a few future-specific environment
+   variables are adjusted such that the tests play nices with the testing
+   environment.  For instance, it sets the socket connection timeout for
+   PSOCK cluster workers to 120 seconds (instead of the default 30 days!).
+   This will lower the risk for more and more zombie worker processes
+   cluttering up the test machine (e.g. CRAN servers) in case a worker process
+   is left behind despite the main R processes is terminated.  Note that these
+   adjustments are applied automatically to the checks of any package that
+   depends on, or imports, the 'future' package.
+
+BUG FIXES:
+
+ * Whenever makeClusterPSOCK() would fail to connect to a worker, for instance
+   due to a port clash, then it would leave the R worker process running - also
+   after the main R process terminated.  When the worker is running on the same
+   machine, makeClusterPSOCK() will now attempt to kill such stray R processes.
+   Note that parallel::makePSOCKcluster() still has this problem.
+
+
 Version: 1.11.0 [2019-01-21]
 
 SIGNIFICANT CHANGES:

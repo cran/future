@@ -7,7 +7,11 @@ message("Library paths: ", paste(sQuote(.libPaths()), collapse = ", "))
 message("Package path: ", sQuote(system.file(package = "future")))
 
 types <- "PSOCK"
-if (supportsMulticore()) types <- c(types, "FORK")
+
+## Speed up CRAN checks: Skip on CRAN Windows 32-bit
+if (isWin32) types <- NULL
+
+if (supportsMulticore() && !on_solaris) types <- c(types, "FORK")
 
 ## WORKAROUND: covr::package_coverage() -> merge_coverage() -> ... produces
 ## "Error in readRDS(x) : error reading from connection" for type = "FORK".
@@ -27,7 +31,7 @@ for (type in types) {
     options(mc.cores = cores)
   
     ## Set up a cluster with <cores> nodes (explicitly)
-    cl <- parallel::makeCluster(cores, type = type)
+    cl <- parallel::makeCluster(cores, type = type, timeout = 60)
     print(cl)
     
     plan(cluster, workers = cl)
@@ -205,7 +209,7 @@ for (type in types) {
   message("*** cluster() - assert registry behavior ...")
   
   ## Explicitly created clusters are *not* added to the registry
-  cl <- parallel::makeCluster(1L, type = type)
+  cl <- parallel::makeCluster(1L, type = type, timeout = 60)
   plan(cluster, workers = cl)
   clR <- ClusterRegistry("get")
   stopifnot(is.null(clR))
@@ -229,11 +233,11 @@ for (type in types) {
   parallel::stopCluster(cl)
   plan(sequential)
 
-  cl1 <- parallel::makeCluster(1L, type = type)
+  cl1 <- parallel::makeCluster(1L, type = type, timeout = 60)
   plan(cluster, workers = cl1)
   f1 <- future(1)
 
-  cl1 <- parallel::makeCluster(1L, type = type)
+  cl1 <- parallel::makeCluster(1L, type = type, timeout = 60)
   plan(cluster, workers = cl1)
 
   message(sprintf("Test set #1 with cluster type %s ... DONE", sQuote(type)))
@@ -247,7 +251,7 @@ for (type in types) {
 
   message("*** cluster() - setDefaultCluster() ...")
   
-  cl <- makeCluster(1L, type = type)
+  cl <- makeCluster(1L, type = type, timeout = 60)
   print(cl)
   
   setDefaultCluster(cl)
@@ -286,7 +290,7 @@ for (type in types) {
  
   message(sprintf("Test set #3 with cluster type %s ...", sQuote(type)))
   
-  cl <- parallel::makeCluster(1L, type = type)
+  cl <- parallel::makeCluster(1L, type = type, timeout = 60)
   print(cl)
 
 
@@ -313,7 +317,7 @@ for (type in types) {
   # parallel::stopCluster(cl)
 
   ## Verify that the reset worked
-  cl <- parallel::makeCluster(1L, type = type)
+  cl <- parallel::makeCluster(1L, type = type, timeout = 60)
   print(cl)
   plan(cluster, workers = cl, .skip = FALSE)
   x %<-% 43L
