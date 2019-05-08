@@ -392,7 +392,7 @@ Hello world!
 <pre><code class="r">&gt; plan(sequential)
 &gt; pid &lt;- Sys.getpid()
 &gt; pid
-[1] 27015
+[1] 23153
 &gt; a %&lt;-% {
 +     pid &lt;- Sys.getpid()
 +     cat(&quot;Future &#39;a&#39; ...\n&quot;)
@@ -410,14 +410,14 @@ Hello world!
 Future &#39;a&#39; ...
 &gt; b
 Future &#39;b&#39; ...
-[1] 27015
+[1] 23153
 &gt; c
 Future &#39;c&#39; ...
 [1] 6.28
 &gt; a
 [1] 3.14
 &gt; pid
-[1] 27015
+[1] 23153
 </code></pre>
 
 <p>Since eager sequential evaluation is taking place, each of the three futures is resolved instantaneously in the moment it is created.  Note also how <code>pid</code> in the calling environment, which was assigned the process ID of the current process, is neither overwritten nor removed.  This is because futures are evaluated in a local environment.  Since synchronous (uni-)processing is used, future <code>b</code> is resolved by the main R process (still in a local environment), which is why the value of <code>b</code> and <code>pid</code> are the same.</p>
@@ -437,7 +437,7 @@ Future &#39;c&#39; ...
 <pre><code class="r">&gt; plan(multisession)
 &gt; pid &lt;- Sys.getpid()
 &gt; pid
-[1] 27015
+[1] 23153
 &gt; a %&lt;-% {
 +     pid &lt;- Sys.getpid()
 +     cat(&quot;Future &#39;a&#39; ...\n&quot;)
@@ -455,14 +455,14 @@ Future &#39;c&#39; ...
 Future &#39;a&#39; ...
 &gt; b
 Future &#39;b&#39; ...
-[1] 27241
+[1] 23246
 &gt; c
 Future &#39;c&#39; ...
 [1] 6.28
 &gt; a
 [1] 3.14
 &gt; pid
-[1] 27015
+[1] 23153
 </code></pre>
 
 <p>The first thing we observe is that the values of <code>a</code>, <code>c</code> and <code>pid</code> are the same as previously.  However, we notice that <code>b</code> is different from before.  This is because future <code>b</code> is evaluated in a different R process and therefore it returns a different process ID.</p>
@@ -478,7 +478,7 @@ mc.cores
 
 <h4>Multicore Futures</h4>
 
-<p>On operating systems where R supports <em>forking</em> of processes, which is basically all operating system except Windows, an alternative to spawning R sessions in the background is to fork the existing R process.  To use multicore futures, we specify:</p>
+<p>On operating systems where R supports <em>forking</em> of processes, which is basically all operating system except Windows, an alternative to spawning R sessions in the background is to fork the existing R process.  To use multicore futures, when supported, specify:</p>
 
 <pre><code class="r">plan(multicore)
 </code></pre>
@@ -486,6 +486,8 @@ mc.cores
 <p>Just like for multisession futures, the maximum number of parallel processes running will be decided by <code>availableCores()</code>, since in both cases the evaluation is done on the local machine.</p>
 
 <p>Forking an R process can be faster than working with a separate R session running in the background.  One reason is that the overhead of exporting large globals to the background session can be greater than when forking, and therefore shared memory, is used.  On the other hand, the shared memory is <em>read only</em>, meaning any modifications to shared objects by one of the forked processes (&ldquo;workers&rdquo;) will cause a copy by the operating system.  This can also happen when the R garbage collector runs in one of the forked processes.</p>
+
+<p>On the other hand, process forking is also considered unstable in some R environments.  For instance, when running R from within RStudio process forking may resulting in crashed R sessions.  Because of this, the future package disables multicore futures by default when running from RStudio.  See <code>help(&quot;supportsMulticore&quot;)</code> for more details.</p>
 
 <h4>Multiprocess Futures</h4>
 
@@ -503,7 +505,7 @@ mc.cores
 <pre><code class="r">&gt; plan(cluster, workers = c(&quot;n1&quot;, &quot;n2&quot;, &quot;n3&quot;))
 &gt; pid &lt;- Sys.getpid()
 &gt; pid
-[1] 27015
+[1] 23153
 &gt; a %&lt;-% {
 +     pid &lt;- Sys.getpid()
 +     cat(&quot;Future &#39;a&#39; ...\n&quot;)
@@ -521,14 +523,14 @@ mc.cores
 Future &#39;a&#39; ...
 &gt; b
 Future &#39;b&#39; ...
-[1] 27356
+[1] 23352
 &gt; c
 Future &#39;c&#39; ...
 [1] 6.28
 &gt; a
 [1] 3.14
 &gt; pid
-[1] 27015
+[1] 23153
 </code></pre>
 
 <p>Any types of clusters that <code>parallel::makeCluster()</code> creates can be used for cluster futures.  For instance, the above cluster can be explicitly set up as:</p>
@@ -567,24 +569,24 @@ Clusters created implicitly using <code>plan(cluster, workers = hosts)</code> wh
 +     c(b.pid = Sys.getpid(), b1.pid = b1, b2.pid = b2)
 + }
 &gt; pid
-[1] 27015
+[1] 23153
 &gt; a
 Future &#39;a&#39; ...
-[1] 27435
+[1] 23429
 &gt; b
 Future &#39;b&#39; ...
 Future &#39;b1&#39; ...
 Future &#39;b2&#39; ...
  b.pid b1.pid b2.pid 
- 27436  27436  27436 
+ 23430  23430  23430 
 </code></pre>
 
 <p>By inspection the process IDs, we see that there are in total three different processes involved for resolving the futures.  There is the main R process
-(pid 27015),
+(pid 23153),
 and there are the two processes used by <code>a</code>
-(pid 27435)
+(pid 23429)
 and <code>b</code>
-(pid 27436).
+(pid 23430).
 However, the two futures (<code>b1</code> and <code>b2</code>) that is nested by <code>b</code> are evaluated by the same R process as <code>b</code>.  This is because nested futures use sequential evaluation unless otherwise specified.  There are a few reasons for this, but the main reason is that it protects us from spawning off a large number of background processes by mistake, e.g. via recursive calls.</p>
 
 <p>To specify a different type of <em>evaluation topology</em>, other than the first level of futures being resolved by multiprocess evaluation and the second level by sequential evaluation, we can provide a list of evaluation strategies to <code>plan()</code>.  First, the same evaluation strategies as above can be explicitly specified as:</p>
@@ -597,16 +599,16 @@ However, the two futures (<code>b1</code> and <code>b2</code>) that is nested by
 <pre><code class="r">&gt; plan(list(multiprocess, multiprocess))
 [...]
 &gt; pid
-[1] 27015
+[1] 23153
 &gt; a
 Future &#39;a&#39; ...
-[1] 27437
+[1] 23431
 &gt; b
 Future &#39;b&#39; ...
 Future &#39;b1&#39; ...
 Future &#39;b2&#39; ...
  b.pid b1.pid b2.pid 
- 27438  27438  27438 
+ 23432  23432  23432 
 </code></pre>
 
 <p>The reason for this is, also here, to protect us from launching more processes than what the machine can support.  Internally, this is done by setting <code>mc.cores = 1</code> such that functions like <code>parallel::mclapply()</code> will fall back to run sequentially.  This is the case for both multisession and multicore evaluation.</p>
@@ -616,22 +618,22 @@ Future &#39;b2&#39; ...
 <pre><code class="r">&gt; plan(list(sequential, multiprocess))
 [...]
 &gt; pid
-[1] 27015
+[1] 23153
 &gt; a
 Future &#39;a&#39; ...
-[1] 27015
+[1] 23153
 &gt; b
 Future &#39;b&#39; ...
 Future &#39;b1&#39; ...
 Future &#39;b2&#39; ...
  b.pid b1.pid b2.pid 
- 27015  27439  27440 
+ 23153  23433  23434 
 </code></pre>
 
 <p>which clearly show that <code>a</code> and <code>b</code> are resolved in the calling process
-(pid 27015)
+(pid 23153)
 whereas the two nested futures (<code>b1</code> and <code>b2</code>) are resolved in two separate R processes
-(pids 27439 and 27440).</p>
+(pids 23433 and 23434).</p>
 
 <p>Having said this, it is indeed possible to use nested multiprocess evaluation strategies, if we explicitly specify (read <em>force</em>) the number of cores available at each level.  In order to do this we need to &ldquo;tweak&rdquo; the default settings, which can be done as follows:</p>
 
@@ -639,24 +641,24 @@ whereas the two nested futures (<code>b1</code> and <code>b2</code>) are resolve
 +     workers = 2L)))
 [...]
 &gt; pid
-[1] 27015
+[1] 23153
 &gt; a
 Future &#39;a&#39; ...
-[1] 27441
+[1] 23435
 &gt; b
 Future &#39;b&#39; ...
 Future &#39;b1&#39; ...
 Future &#39;b2&#39; ...
  b.pid b1.pid b2.pid 
- 27442  27443  27444 
+ 23436  23437  23438 
 </code></pre>
 
 <p>First, we see that both <code>a</code> and <code>b</code> are resolved in different processes
-(pids 27441 and 27442)
+(pids 23435 and 23436)
 than the calling process
-(pid 27015).
+(pid 23153).
 Second, the two nested futures (<code>b1</code> and <code>b2</code>) are resolved in yet two other R processes
-(pids 27443 and 27444).</p>
+(pids 23437 and 23438).</p>
 
 <p>For more details on working with nested futures and different evaluation strategies at each level, see Vignette &#39;<a href="future-3-topologies.html">Futures in R: Future Topologies</a>&#39;.</p>
 
@@ -689,7 +691,7 @@ Waiting for &#39;a&#39; to be resolved ...
 Waiting for &#39;a&#39; to be resolved ... DONE
 &gt; a
 Future &#39;a&#39; ...done
-[1] 27445
+[1] 23439
 </code></pre>
 
 <h2>Failed Futures</h2>
@@ -750,9 +752,9 @@ Moreover, if a global is defined in a package, then that global is not exported.
 &gt; v &lt;- lapply(f, FUN = value)
 &gt; str(v)
 List of 3
- $ : int 27446
- $ : int 27447
- $ : int 27448
+ $ : int 23443
+ $ : int 23444
+ $ : int 23445
 </code></pre>
 
 <p>This is <em>not</em> possible to do when using implicit futures.  This is because the <code>%&lt;-%</code> assignment operator <em>cannot</em> be used in all cases where the regular <code>&lt;-</code> assignment operator can be used.  It can only be used to assign future values to <em>environments</em> (including the calling environment) much like how <code>assign(name, value, envir)</code> works.  However, we can assign implicit futures to environments using <em>named indices</em>, e.g.</p>
@@ -767,9 +769,9 @@ List of 3
 &gt; v &lt;- as.list(v)
 &gt; str(v)
 List of 3
- $ a: int 27449
- $ b: int 27450
- $ c: int 27451
+ $ a: int 23446
+ $ b: int 23447
+ $ c: int 23448
 </code></pre>
 
 <p>Here <code>as.list(v)</code> blocks until all futures in the environment <code>v</code> have been resolved.  Then their values are collected and returned as a regular list.</p>
@@ -787,9 +789,9 @@ List of 3
 &gt; v &lt;- as.list(v)
 &gt; str(v)
 List of 3
- $ : int 27452
- $ : int 27453
- $ : int 27454
+ $ : int 23449
+ $ : int 23450
+ $ : int 23451
 </code></pre>
 
 <p>As previously, <code>as.list(v)</code> blocks until all futures are resolved.</p>
