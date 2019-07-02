@@ -265,6 +265,108 @@ It may also become a problem with futures evaluated with lazy evaluation if the 
 [1] &quot;haha!&quot; &quot;haha!&quot; &quot;haha!&quot;
 </code></pre>
 
+<h4>get() - object not found</h4>
+
+<p>The base R function <code>get()</code> can be used to get the value of a object by its name.  For example, <code>get(&quot;pi&quot;, envir = baseenv())</code> will get the value of object <code>pi</code> in the &#39;base&#39; environment, i.e. it corresponds to <code>base::pi</code>.  If no other objects named <code>pi</code> exists on the search path, we could have used <code>get(&quot;pi&quot;)</code> and <code>pi</code>, respectively.  It is not unusal to see code snippets such as:</p>
+
+<pre><code class="r">&gt; a &lt;- 1:3
+&gt; b &lt;- 4:6
+&gt; c &lt;- 3:5
+&gt; my_sum &lt;- function(var) { sum(get(var)) }
+&gt; y &lt;- my_sum(&quot;a&quot;)
+&gt; y
+[1] 6
+</code></pre>
+
+<p>If we attempt to call <code>my_sum()</code> via a future, we will get an error (if the future is resolved in an external R process);</p>
+
+<pre><code class="r">&gt; library(&quot;future&quot;)
+&gt; plan(multisession)
+&gt; f &lt;- future(my_sum(&quot;a&quot;))
+&gt; y &lt;- value(f)
+Error in get(var) : object &#39;a&#39; not found
+</code></pre>
+
+<p>This is because the static code inspection done on the future expression <code>my_sum(&quot;a&quot;)</code> does not reveal object <code>a</code> as a global object.  In that expression alone, there are only three objects: the function <code>my_sum()</code>, the primitive function <code>(</code>, and the string <code>&quot;a&quot;</code>, and none of those are object <code>a</code>.  The future framework will also scan these three objects for globals, which in this example means that it scans also <code>my_sum()</code>.  This recursive search for globals will identify three additional globals, namely, the primitive function <code>{</code>, the function <code>sum()</code>, and the function <code>get()</code>, but, as before, none of these source will identify <code>a</code> as a global object.
+In order for <code>a</code> to be identified, the future framework would need to have a built-in understanding on how <code>get(var)</code> works, which would be a daunting task, especially if it need to know it acts for different data types of <code>var</code> and various choices on arguments <code>envir</code> and <code>enclos</code>.  In fact, this can often not be inferred until run time, that is, it is not possible to identify what objects are needed without actually running the code.  In short, it is not possible to automatically identify global variables specified via a character string.</p>
+
+<p>The workaround is to tell the future framework what <em>additional</em> globals are needed.  This can be done via argument <code>globals</code> using:</p>
+
+<pre><code class="r">&gt; f &lt;- future(my_sum(&quot;a&quot;), globals = structure(TRUE, add = &quot;a&quot;))
+&gt; y &lt;- value(f)
+&gt; y
+[1] 6
+</code></pre>
+
+<p>Note that, independently of the future framework, it is often a bad idea to use <code>get()</code>, and related functions <code>mget()</code> and <code>assign()</code>, in R code.  Searching the archives of R forums, such as the R-help and R-devel mailing lists, will reveal numerous suggestions against using them.  A good rule of thumb is:</p>
+
+<blockquote>
+<p>If you find yourself using <code>get()</code> in your code, take a step back, and reconsider your implementation.  There is most likely better solution available.</p>
+</blockquote>
+
+<p>For example, consider this, slightly more complex, example:</p>
+
+<pre><code class="r">&gt; a &lt;- 1:3
+&gt; b &lt;- 4:7
+&gt; c &lt;- 3:5
+&gt; my_sum &lt;- function(var) { sum(get(var)) }
+&gt; y &lt;- sapply(c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;), FUN = my_sum)
+&gt; y
+ a  b  c
+ 6 22 12
+</code></pre>
+
+<p>Instead of using &ldquo;free roaming&rdquo; objects <code>a</code>, <code>b</code>, and <code>c</code>, it&#39;s better to put those values in a list (or a data frame of of the same length);</p>
+
+<pre><code class="r">&gt; data &lt;- list(a = 1:3, b = 4:7, c = 3:5)
+</code></pre>
+
+<p>This will in turn allow us to perform the same calculations without having to use <code>get()</code>;</p>
+
+<pre><code class="r">&gt; my_sum &lt;- function(x) { sum(x) }
+&gt; y &lt;- sapply(data, FUN = my_sum)
+&gt; y
+ a  b  c
+ 6 22 12
+</code></pre>
+
+<h4>glue::glue() - object not found</h4>
+
+<p>The future framework will fail to identify globals that are declared via character strings.  The above section show an example of this where <code>get()</code> is used and explains why it is not feasible to automatically identify string-embedded globals from such code.  Another example, is when using <code>glue()</code> from the glue package to generate strings dynamically, e.g.</p>
+
+<pre><code class="r">&gt; library(&quot;glue&quot;)
+&gt; a &lt;- 42
+&gt; s &lt;- glue(&quot;The value of a is {a}.&quot;)
+&gt; s
+The value of a is 42.
+</code></pre>
+
+<p>Attempt to perform the same via a future that is resolved in another R session will produce an &ldquo;object not found&rdquo; error;</p>
+
+<pre><code class="r">&gt; library(&quot;glue&quot;)
+&gt; library(&quot;future&quot;)
+&gt; plan(multisession)
+&gt; a &lt;- 42
+&gt; s %&lt;-% glue(&quot;The value of a is {a}.&quot;)
+&gt; s
+Error in eval(parse(text = text, keep.source = FALSE), envir) : 
+  object &#39;a&#39; not found
+</code></pre>
+
+<p>As examplained in the previous section, the workaround is to specify what additional global variables there are, which can be done as:</p>
+
+<pre><code>&gt; s %&lt;-% glue(&quot;The value of a is {a}.&quot;) %globals% structure(TRUE, add = &quot;a&quot;)
+&gt; s
+The value of a is 42.
+</code></pre>
+
+<p>An alternative solution is to guide the future framework by adding the missing globals as &ldquo;dummy&rdquo; variables, e.g.</p>
+
+<pre><code>&gt; s %&lt;-% { a; glue(&quot;The value of a is {a}.&quot;) }
+&gt; s
+The value of a is 42.
+</code></pre>
+
 <h3>Missing packages (false negatives)</h3>
 
 <p>Occassionally, the static-code inspection of the future expression fails to identify packages needed to evaluated the expression.  This may occur when an expression uses S3 generic functions part of one package whereas the required S3 method is in another package.  For example, in the below future generic function <code>[</code> is used on data.table object <code>DT</code>, which requires S3 method <code>[.data.table</code> from the data.table package.  However, the future and global packages fail to identify data.table as a required package, which results in an evaluation error:</p>
