@@ -434,7 +434,7 @@ f &lt;- future({
 ## globals (&#39;Double&#39; of class &#39;jclassName&#39;) used in the future expression
 </code></pre>
 
-<h3>Package: udpipe</h3>
+<h3>Package: sparklyr</h3>
 
 <pre><code class="r">library(&quot;future&quot;)
 plan(multisession)
@@ -458,13 +458,11 @@ exists, which suggests that the localhost worker is still alive.
 d %&lt;-% dim(data)
 ## Error: Detected a non-exportable reference (&#39;externalptr&#39;) in one of
 the globals (&#39;data&#39; of class &#39;tbl_spark&#39;) used in the future expression
-``
+</code></pre>
 
+<h3>Package: udpipe</h3>
 
-### Package: udpipe
-
-```r
-library(&quot;future&quot;)
+<pre><code class="r">library(&quot;future&quot;)
 plan(multisession)
 library(&quot;udpipe&quot;)
 udmodel &lt;- udpipe_download_model(language = &quot;dutch&quot;)
