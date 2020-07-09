@@ -209,7 +209,7 @@ hr {
 <p>For simplicitly, lets start with an illustration on how standard output (&ldquo;stdout&rdquo;) is captured and relayed:</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
-&gt; plan(multiprocess)
+&gt; plan(multisession)
 
 &gt; fa &lt;- future({ cat(&quot;Hello world!\n&quot;); print(1:3); 42L })
 &gt; fb &lt;- future({ str(iris); summary(iris) })
@@ -251,7 +251,7 @@ Hello world!
 <p>Output is relayed the same way when using future assignments (<code>%&lt;-%</code>).  For example,</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
-&gt; plan(multiprocess)
+&gt; plan(multisession)
 
 &gt; a %&lt;-% { cat(&quot;Hello world!\n&quot;); print(1:3); 42L }
 &gt; b %&lt;-% { str(iris); summary(iris) }
@@ -287,7 +287,7 @@ Hello world!
 <p>Next, lets see what happens if we use <code>message()</code> to produce output:</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
-&gt; plan(multiprocess)
+&gt; plan(multisession)
 &gt; fa &lt;- future({ message(&quot;Hello world!&quot;); 42L })
 &gt; value(fa)
 Hello world!
@@ -297,7 +297,7 @@ Hello world!
 <p>Note that contrary to the captured stdout, which is captured as one single block output, messages are conditions that are captured separately.  Unfortunately, it is <em>not</em> possible to preserve the ordering of interweaved stdout and message output.  When using futures, stdout output will always be relayed first followed by each of the individual conditions captured.  For example,</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
-&gt; plan(multiprocess)
+&gt; plan(multisession)
 &gt; fa &lt;- future({ message(&quot;Hello&quot;); print(1:3); message(&quot;world!&quot;); cat(&quot;ping\n&quot;); 42L })
 &gt; value(fa)
 [1] 1 2 3   ## &lt;= stdout as a single ...
@@ -366,7 +366,7 @@ List of 3
 <h2>Supressing messages</h2>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
-&gt; plan(multiprocess)
+&gt; plan(multisession)
 &gt; fa &lt;- future({ message(&quot;Hello&quot;); print(1:3); message(&quot;world!&quot;); cat(&quot;ping\n&quot;); 42L })
 &gt; suppressMessages(a &lt;- value(fa))
 [1] 1 2 3
@@ -381,7 +381,7 @@ ping
 
 <hr/>
 
-<p>Copyright Henrik Bengtsson, 2018-2019</p>
+<p>Copyright Henrik Bengtsson, 2018-2020</p>
 
 </body>
 

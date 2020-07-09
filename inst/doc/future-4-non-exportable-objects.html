@@ -274,6 +274,10 @@ f &lt;- future({ cat(&quot;world!&quot;, file = con); flush(con) })
 <td>DBIConnection</td>
 </tr>
 <tr>
+<td><strong>magick</strong></td>
+<td>magick-image</td>
+</tr>
+<tr>
 <td><strong>Rcpp</strong></td>
 <td>NativeSymbol</td>
 </tr>
@@ -315,6 +319,33 @@ con &lt;- dbConnect(RSQLite::SQLite(), &quot;:memory:&quot;)
 dummy %&lt;-% print(con)
 ## Error: Detected a non-exportable reference (&#39;externalptr&#39;) in one of the globals
 ## (&#39;con&#39; of class &#39;SQLiteConnection&#39;) used in the future expression
+</code></pre>
+
+<h3>Package: magic</h3>
+
+<p><a href="https://cran.r-project.org/package=magick">magick</a> provides an R-level API for ImageMagick to work with images.  When working with this API, the images are represented internally as external pointers of class &#39;magick_image&#39; that cannot be be exported to another R process, e.g.</p>
+
+<pre><code class="r">library(&quot;future&quot;)
+plan(multisession)
+library(&quot;magick&quot;)
+frink &lt;- magick::image_read(&quot;https://jeroen.github.io/images/frink.png&quot;)
+f &lt;- future(image_fill(frink, &quot;orange&quot;, &quot;+100+200&quot;, 20))
+v &lt;- value(f)
+## Error: Image pointer is dead. You cannot save or cache image objects
+## between R sessions.
+</code></pre>
+
+<p>If we set:</p>
+
+<pre><code class="r">options(future.globals.onReference = &quot;error&quot;)
+</code></pre>
+
+<p>we&#39;ll see that this is caught even before attempting to run this in parallel;</p>
+
+<pre><code class="r">&gt; f &lt;- future(image_fill(frink, &quot;orange&quot;, &quot;+100+200&quot;, 20))
+## Error: Detected a non-exportable reference (&#39;externalptr&#39; of class
+## &#39;magick-image&#39;) in one of the globals (&#39;frink&#39; of class &#39;magick-image&#39;)
+## used in the future expression
 </code></pre>
 
 <h3>Package: Rcpp</h3>
@@ -506,7 +537,7 @@ f &lt;- future(xml_children(xml))
 
 <hr/>
 
-<p>Copyright Henrik Bengtsson, 2019</p>
+<p>Copyright Henrik Bengtsson, 2020</p>
 
 </body>
 

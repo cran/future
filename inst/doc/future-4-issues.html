@@ -443,7 +443,7 @@ Error in FALSE :
 <p>It is not possible for a future to resolve another one unless it was created by the future trying to resolve it.  For instance, the following gives an error:</p>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
-&gt; plan(multiprocess)
+&gt; plan(multisession)
 &gt; f1 &lt;- future({ Sys.getpid() })
 &gt; f2 &lt;- future({ value(f1) })
 &gt; v1 &lt;- value(f1)
@@ -616,7 +616,7 @@ Undefined global functions or variables:
 
 <hr/>
 
-<p>Copyright Henrik Bengtsson, 2015-2019</p>
+<p>Copyright Henrik Bengtsson, 2015-2020</p>
 
 </body>
 

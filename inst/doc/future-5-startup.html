@@ -210,13 +210,13 @@ hr {
 
 <p>The default strategy for resolving futures can be controlled via R option <code>future.plan</code>.  For instance, if we add</p>
 
-<pre><code class="r">options(future.plan = &quot;multiprocess&quot;)
+<pre><code class="r">options(future.plan = &quot;multisession&quot;)
 </code></pre>
 
 <p>to our <code>~/.Rprofile</code> startup script, the future package will resolve futures in parallel (asynchronously using all available cores), i.e.</p>
 
 <pre><code class="sh">$ Rscript -e &quot;class(future::plan())&quot;
-[1] &quot;multiprocess&quot; &quot;future&quot;       &quot;function&quot;
+[1] &quot;multisession&quot; &quot;future&quot;       &quot;function&quot;
 </code></pre>
 
 <p>Option <code>future.plan</code> is ignored if command-line option <code>--parallel</code> (<code>-p</code>) is specified.</p>
@@ -225,9 +225,9 @@ hr {
 
 <p>An alternative to using <code>options()</code> for setting option <code>future.plan</code> is to specify system environment variable <code>R_FUTURE_PLAN</code>.  If set, then the future package will set <code>future.plan</code> accordingly <em>when loaded</em>.  For example,</p>
 
-<pre><code class="sh">$ export R_FUTURE_PLAN=multiprocess
+<pre><code class="sh">$ export R_FUTURE_PLAN=multisession
 $ Rscript -e &quot;class(future::plan())&quot;
-[1] &quot;multiprocess&quot; &quot;future&quot;       &quot;function&quot;
+[1] &quot;multisession&quot; &quot;future&quot;       &quot;function&quot;
 </code></pre>
 
 <p>Environment variable <code>R_FUTURE_PLAN</code> is ignored if either option <code>future.plan</code> or command-line option <code>--parallel</code> (<code>-p</code>) is specified.</p>
@@ -245,7 +245,7 @@ $ Rscript -e &quot;class(future::plan())&quot;
 mc.cores
        2
 &gt; class(future::plan())
-[1] &quot;tweaked&quot;      &quot;multiprocess&quot; &quot;future&quot;       &quot;function&quot;
+[1] &quot;tweaked&quot;      &quot;multisession&quot; &quot;future&quot;       &quot;function&quot;
 </code></pre>
 
 <p>We can use this command-line option also with <code>Rscript</code>, which provides a convenient mechanism for launching future-enhanced R scripts such that they run in parallel, e.g.</p>
@@ -261,7 +261,7 @@ mc.cores
 
 <hr/>
 
-<p>Copyright Henrik Bengtsson, 2015-2019</p>
+<p>Copyright Henrik Bengtsson, 2015-2020</p>
 
 </body>
 
