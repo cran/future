@@ -318,7 +318,7 @@ In order for <code>a</code> to be identified, the future framework would need to
 <p>Note that, independently of the future framework, it is often a bad idea to use <code>get()</code>, and related functions <code>mget()</code> and <code>assign()</code>, in R code.  Searching the archives of R forums, such as the R-help and R-devel mailing lists, will reveal numerous suggestions against using them.  A good rule of thumb is:</p>
 
 <blockquote>
-<p>If you find yourself using <code>get()</code> in your code, take a step back, and reconsider your implementation.  There is most likely better solution available.</p>
+<p>If you find yourself using <code>get()</code> in your code, take a step back, and reconsider your implementation.  There is most likely a better solution available.</p>
 </blockquote>
 
 <p>For example, consider this, slightly more complex, example:</p>
@@ -349,7 +349,7 @@ In order for <code>a</code> to be identified, the future framework would need to
 
 <h4>glue::glue() - object not found</h4>
 
-<p>The future framework will fail to identify globals that are declared via character strings.  The above section show an example of this where <code>get()</code> is used and explains why it is not feasible to automatically identify string-embedded globals from such code.  Another example, is when using <code>glue()</code> from the glue package to generate strings dynamically, e.g.</p>
+<p>The future framework will fail to identify globals that are declared via character strings.  The above section gives an example of this where <code>get()</code> is used and explains why it is not feasible to automatically identify string-embedded globals from such code.  Another example, is when using <code>glue()</code> from the glue package to generate strings dynamically, e.g.</p>
 
 <pre><code class="r">&gt; library(&quot;glue&quot;)
 &gt; a &lt;- 42
