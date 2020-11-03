@@ -241,11 +241,11 @@ $ Rscript -e &quot;class(future::plan())&quot;
 
 <p>then future will interpret this as we wish to resolve futures in parallel using 2 cores.  More specifically, we get that</p>
 
-<pre><code class="r">&gt; future::availableCores()
+<pre><code class="r">&gt; availableCores()
 mc.cores
        2
 &gt; class(future::plan())
-[1] &quot;tweaked&quot;      &quot;multisession&quot; &quot;future&quot;       &quot;function&quot;
+[1] &quot;FutureStrategy&quot; &quot;tweaked&quot;        &quot;multisession&quot;   &quot;future&quot;         &quot;function&quot;
 </code></pre>
 
 <p>We can use this command-line option also with <code>Rscript</code>, which provides a convenient mechanism for launching future-enhanced R scripts such that they run in parallel, e.g.</p>

@@ -276,7 +276,7 @@ Hello world!
  Max.   :7.900   Max.   :4.400   Max.   :6.900   Max.   :2.500                  
 </code></pre>
 
-<p>Note how the captured output is relayed followed by the printing of the value.  Also, since the future value is only queried once when using future assignments, or more specifically when using promises, the output is only relaid once.  For example, querying <code>a</code> again will only print its value, because it is now a regular R object:</p>
+<p>Note how the captured output is relayed followed by the printing of the value.  Also, since the future value is only queried once when using future assignments, or more specifically when using promises, the output is only relayed once.  For example, querying <code>a</code> again will only print its value, because it is now a regular R object:</p>
 
 <pre><code class="r">&gt; a
 [1] 42
@@ -363,7 +363,7 @@ List of 3
 [1] 42
 </code></pre>
 
-<h2>Supressing messages</h2>
+<h2>Suppressing messages</h2>
 
 <pre><code class="r">&gt; library(&quot;future&quot;)
 &gt; plan(multisession)
@@ -377,7 +377,7 @@ ping
 
 <h2>Known limitations</h2>
 
-<p>It is only the standard output that is relayed.  It is <em>not possible</em> to relay output send to the standard error (stderr), e.g. output by <code>cat(..., file = stderr())</code> will be lost.  This is due to a <a href="https://github.com/HenrikBengtsson/Wishlist-for-R/issues/55">limitation in R</a>, preventing us from capturing stderr in a reliable way, particularity across all backends.  However, note that the captured messages by <code>message()</code> are outputted to stderr (as expected) when resignalled/relayed.</p>
+<p>It is only the standard output that is relayed.  It is <em>not possible</em> to relay output send to the standard error (stderr), e.g. output by <code>cat(..., file = stderr())</code> will be lost.  This is due to a <a href="https://github.com/HenrikBengtsson/Wishlist-for-R/issues/55">limitation in R</a>, preventing us from capturing stderr in a reliable way, particularity across all backends.  However, note that the captured messages by <code>message()</code> are outputted to stderr (as expected) when resignaled/relayed.</p>
 
 <hr/>
 
