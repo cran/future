@@ -158,7 +158,7 @@ hr {
 }
 </style>
 
-<meta name="keywords" content="R, package, vignette, future, promise, backend">
+<meta name="keywords" content="R, package, vignette, future, Future API, backend">
 <meta name="author" content="Henrik Bengtsson">
 
 </head>
@@ -166,7 +166,7 @@ hr {
 <body>
 <h1>Future API Backend Specification</h1>
 
-<p>Version 0.1.0</p>
+<p>Version 0.1.0-1</p>
 
 <h2>Introduction</h2>
 
@@ -203,13 +203,13 @@ hr {
 <p>The implementation of a future backend for these involves several steps.  For simplicity, lets say we call our future backend &#39;myparallel&#39;.  In summary, a future backend needs to implement four API components:</p>
 
 <ul>
-<li>A constructor function <code>myparallel()</code> that inherits from class <code>future</code>.  This function should return a <code>Future</code> object (as defined in the <a href="https://cran.r-project.org/package=future">future</a> package) that also inherits from S3 class <code>MyParallelFuture</code>.  The default should be that this function calls <code>run()</code> on the <code>Future</code> object before returning.</li>
+<li>A constructor function <code>myparallel()</code> that inherits from class <code>future</code>.  This function should return a <code>Future</code> object (as defined in the <a href="https://cran.r-project.org/package=future">future</a> package) that also inherits from S3 class <code>MyParallelFuture</code>.  The default should be that this function calls <code>run()</code> on the <code>Future</code> object before returning, unless a <em>lazy</em> is created.</li>
 <li>An S3 method of <code>run()</code> for  <code>MyParallelFuture</code> that starts the evaluation of the future R expression part of the <code>Future</code> object.  This method is often non-blocking for parallel backends, but may be blocking if all compute resources are exhausted.  It is typically blocking for sequential backends.</li>
 <li>An S3 method of <code>resolved()</code> for <code>MyParallelFuture</code> that, in a non-blocking fashion, returns <code>TRUE</code> if the future is resolved and <code>FALSE</code> if not.</li>
-<li>An S3 method of <code>results()</code> for <code>MyParallelFuture</code> that returns a <code>FutureResults</code> object (as defined by the <a href="https://cran.r-project.org/package=future">future</a> package) when the future is resolved or otherwise fails to resolve.  If the future is not yet resolved, this method should block until the future is resolved.<br/></li>
+<li>An S3 method of <code>result()</code> for <code>MyParallelFuture</code> that returns a <code>FutureResult</code> object (as defined by the <a href="https://cran.r-project.org/package=future">future</a> package) when the future is resolved or otherwise fails to resolve.  If the future is not yet resolved, this method should block until the future is resolved.<br/></li>
 </ul>
 
-<p>With this in place, the selection of using this backend as the future plan, will be done as <code>plan(myparallel)</code> with the option of specifying certain arguments to be passed to <code>myparallel()</code>.  With the plan set, a call to <code>f &lt;- future(expr)</code> will then correspond to a <code>f &lt;- myparallel(expr)</code> call.  With the defaults, <code>myparallel()</code> will then launch the evaluation of <code>expr</code> asynchronously before returning the <code>MyParallelFuture</code> object.  When calling <code>resolved(f)</code> to query whether the future expression is resolved or not, the underlying S3 method for this class will then check in with the parallel worker whether the expression is resolved or not.  When calling <code>value(f)</code>, the S3 method for the <code>Future</code> class calls <code>results(f)</code>, which will return the <code>FutureResults</code> object for this future.  If the future is not yet resolved, this call will block until it is.  If no errors occurred while resolving the future expression, then <code>value(f)</code> will return the value of the expression, which is recorded by the backend in the <code>FutureResults</code> object.  If there was an evaluation error, then <code>value(f)</code> will resignal (&ldquo;relayed&rdquo;) that error.  Any captured conditions or standard output will also be relayed at this point.</p>
+<p>With this in place, the selection of using this backend as the future plan, will be done as <code>plan(myparallel)</code> with the option of specifying certain arguments to be passed to <code>myparallel()</code>.  With the plan set, a call to <code>f &lt;- future(expr)</code> will then correspond to a <code>f &lt;- myparallel(expr)</code> call.  With the defaults, <code>myparallel()</code> will then launch the evaluation of <code>expr</code> asynchronously before returning the <code>MyParallelFuture</code> object.  When calling <code>resolved(f)</code> to query whether the future expression is resolved or not, the underlying S3 method for this class will then check in with the parallel worker whether the expression is resolved or not.  When calling <code>value(f)</code>, the S3 method for the <code>Future</code> class calls <code>result(f)</code>, which will return the <code>FutureResult</code> object for this future.  If the future is not yet resolved, this call will block until it is.  If no errors occurred while resolving the future expression, then <code>value(f)</code> will return the value of the expression, which is recorded by the backend in the <code>FutureResult</code> object.  If there was an evaluation error, then <code>value(f)</code> will resignal (&ldquo;relayed&rdquo;) that error.  Any captured conditions or standard output will also be relayed at this point.</p>
 
 <h2>Requirements for the backend Future API</h2>
 
@@ -223,7 +223,7 @@ hr {
 
 <p>If the backend supports more than one worker, then it should also have an explicit <code>workers</code> argument.</p>
 
-<p>Any currying arguments that can be specified when setting the future plan must be explicit arguments of the constructor function such that they appear as named elements in <code>formals(myparallel)</code>.  Currying arguments are arguments that can be &ldquo;tweaked&rdquo; by the end-user, e.g. <code>plan(myparallel, workers = 2L)</code>.</p>
+<p>Any currying arguments that can be specified when setting the future plan must be explicit arguments of the constructor function such that they appear as named elements in <code>formals(myparallel)</code>.  Currying arguments are arguments that can be &ldquo;tweaked&rdquo; by the end-user, e.g. <code>plan(myparallel, workers = 2)</code>.</p>
 
 <p>The value of the constructor function should be invisible and a <code>MyParallelFuture</code> object that inherits from <code>Future</code>.  This is achieved by calling <code>Future()</code>, with all matching arguments passed along and then prepending <code>&quot;MyParallelFuture&quot;</code> to the class attribute of the returned <code>Future</code> object.</p>
 
@@ -257,7 +257,7 @@ hr {
 
 <h3>result() method</h3>
 
-<p>An S3 method <code>result()</code> for <code>MyParallelFuture</code> that takes a <code>Future</code> object as its first argument and return a <code>FutureResults</code> object is required.  It should accept additional arguments via <code>...</code>, which are currently not used.</p>
+<p>An S3 method <code>result()</code> for <code>MyParallelFuture</code> that takes a <code>Future</code> object as its first argument and return a <code>FutureResult</code> object is required.  It should accept additional arguments via <code>...</code>, which are currently not used.</p>
 
 <p>The method may be called zero or more times.</p>
 

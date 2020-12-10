@@ -1,5 +1,5 @@
 Package: future
-Version: 1.20.1
+Version: 1.21.0
 Title: Unified Parallel and Distributed Processing in R for Everyone
 Imports: digest, globals (>= 0.13.1), listenv (>= 0.8.0), parallel,
         parallelly (>= 1.21.0), tools, utils
@@ -30,8 +30,8 @@ URL: https://github.com/HenrikBengtsson/future
 BugReports: https://github.com/HenrikBengtsson/future/issues
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2020-10-31 06:44:08 UTC; hb
+Packaged: 2020-12-10 02:38:17 UTC; hb
 Author: Henrik Bengtsson [aut, cre, cph]
 Maintainer: Henrik Bengtsson <henrikb@braju.com>
 Repository: CRAN
-Date/Publication: 2020-11-03 06:40:10 UTC
+Date/Publication: 2020-12-10 09:00:05 UTC

@@ -286,6 +286,10 @@ f &lt;- future({ cat(&quot;world!&quot;, file = con); flush(con) })
 <td align="left">ncdf4 (custom reference; <em>non-detectable</em>)</td>
 </tr>
 <tr>
+<td align="left"><strong>raster</strong></td>
+<td align="left">RasterLayer (<code>externalptr</code>; <em>not all</em>)</td>
+</tr>
+<tr>
 <td align="left"><strong>Rcpp</strong></td>
 <td align="left">NativeSymbol (<code>externalptr</code>)</td>
 </tr>
@@ -308,6 +312,10 @@ f &lt;- future({ cat(&quot;world!&quot;, file = con); flush(con) })
 <tr>
 <td align="left"><strong>udpipe</strong></td>
 <td align="left">udpipe_model (<code>externalptr</code>)</td>
+</tr>
+<tr>
+<td align="left"><strong>xgboost</strong></td>
+<td align="left">xgb.DMatrix (<code>externalptr</code>)</td>
 </tr>
 <tr>
 <td align="left"><strong>xml2</strong></td>
@@ -368,7 +376,7 @@ the future expression
 
 <h4>Package: magic</h4>
 
-<p><a href="https://cran.r-project.org/package=magick">magick</a> provides an R-level API for ImageMagick to work with images.  When working with this API, the images are represented internally as external pointers of class &#39;magick_image&#39; that cannot be be exported to another R process, e.g.</p>
+<p>The <a href="https://cran.r-project.org/package=magick">magick</a> package provides an R-level API for ImageMagick to work with images.  When working with this API, the images are represented internally as external pointers of class &#39;magick_image&#39; that cannot be be exported to another R process, e.g.</p>
 
 <pre><code class="r">library(future)
 plan(multisession)
@@ -392,6 +400,28 @@ v &lt;- value(f)
 ## &#39;magick-image&#39;) in one of the globals (&#39;frink&#39; of class &#39;magick-image&#39;)
 ## used in the future expression
 </code></pre>
+
+<h4>Package: raster</h4>
+
+<p>The <a href="https://cran.r-project.org/package=raster">raster</a> package provides methods for working with spatial data, which are held in &#39;RasterLayer&#39; objects.  Not all but some of these objects use an external pointer.  For example,</p>
+
+<pre><code class="r">library(future)
+plan(multisession)
+
+library(raster)
+r &lt;- raster(system.file(&quot;external/test.grd&quot;, package = &quot;raster&quot;))
+tf &lt;- tempfile(fileext = &quot;.grd&quot;)
+s &lt;- writeStart(r, filename = tf,  overwrite = TRUE)
+
+f &lt;- future({
+  print(dim(r))
+  print(dim(s))
+})
+Error: Detected a non-exportable reference (&#39;externalptr&#39;) in one of the
+globals (&#39;s&#39; of class &#39;RasterLayer&#39;) used in the future expression
+</code></pre>
+
+<p>Note that it is only the RasterLayer object <code>s</code> that carries an external pointer and cannot be passed on to an external worker.  In constract, RasterLayer object <code>r</code> does not have this problem and would be fine to pass on to a worker.</p>
 
 <h4>Package: Rcpp</h4>
 
@@ -558,6 +588,40 @@ x %&lt;-% udpipe_annotate(udmodel, x = &quot;Ik ging op reis en ik nam mee.&quot
 </code></pre>
 
 <p>Now, it is indeed possible to parallelize \pkg{udpipe} calls.  For details on how to do this, see the &#39;UDPipe Natural Language Processing - Parallel&#39; vignette that comes with the \pkg{udpipe} package.</p>
+
+<h4>Package: xgboost</h4>
+
+<p>The <a href="https://cran.r-project.org/package=xgboost">xgboost</a> package provides fast gradient-boosting methods.  Some of its data structures use external pointers.  For example,</p>
+
+<pre><code class="r">library(future)
+plan(multisession)
+
+library(xgboost)
+data(agaricus.train, package = &quot;xgboost&quot;)
+train &lt;- xgb.DMatrix(agaricus.train$data, label = agaricus.train$label)
+print(class(train))
+## [1] &quot;xgb.DMatrix&quot;
+
+d &lt;- dim(dtrain)
+print(d)
+## [1] 6513  126
+</code></pre>
+
+<p>works just fine but if we attempt to pass on the &#39;xgb.DMatrix&#39; object <code>train</code> to an external worker, we silently get a incorrect value:</p>
+
+<pre><code class="r">f &lt;- future(dim(dtrain))
+d &lt;- value(f)
+print(d)
+## NULL
+</code></pre>
+
+<p>This is unfortunate, but we can at least detect this by:</p>
+
+<pre><code class="r">options(future.globals.onReference = &quot;error&quot;)
+f &lt;- future(dim(dtrain))
+## Error: Detected a non-exportable reference (&#39;externalptr&#39; of class &#39;xgb.DMatrix&#39;)
+## in one of the globals (&#39;dtrain&#39; of class &#39;xgb.DMatrix&#39;) used in the future expression
+</code></pre>
 
 <h4>Package: xml2</h4>
 
