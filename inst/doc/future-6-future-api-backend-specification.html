@@ -166,7 +166,7 @@ hr {
 <body>
 <h1>Future API Backend Specification</h1>
 
-<p>Version 0.1.0-1</p>
+<p>Version 0.1.1</p>
 
 <h2>Introduction</h2>
 
@@ -203,7 +203,7 @@ hr {
 <p>The implementation of a future backend for these involves several steps.  For simplicity, lets say we call our future backend &#39;myparallel&#39;.  In summary, a future backend needs to implement four API components:</p>
 
 <ul>
-<li>A constructor function <code>myparallel()</code> that inherits from class <code>future</code>.  This function should return a <code>Future</code> object (as defined in the <a href="https://cran.r-project.org/package=future">future</a> package) that also inherits from S3 class <code>MyParallelFuture</code>.  The default should be that this function calls <code>run()</code> on the <code>Future</code> object before returning, unless a <em>lazy</em> is created.</li>
+<li>A constructor function <code>myparallel()</code> that inherits from class <code>future</code>.  This function should return a <code>Future</code> object (as defined in the <a href="https://cran.r-project.org/package=future">future</a> package) that also inherits from S3 class <code>MyParallelFuture</code> if a non-lazy future is created (the default <code>lazy = FALSE</code>).  The default should be that this function calls <code>run()</code> on the <code>Future</code> object before returning, unless a <em>lazy</em> is created.</li>
 <li>An S3 method of <code>run()</code> for  <code>MyParallelFuture</code> that starts the evaluation of the future R expression part of the <code>Future</code> object.  This method is often non-blocking for parallel backends, but may be blocking if all compute resources are exhausted.  It is typically blocking for sequential backends.</li>
 <li>An S3 method of <code>resolved()</code> for <code>MyParallelFuture</code> that, in a non-blocking fashion, returns <code>TRUE</code> if the future is resolved and <code>FALSE</code> if not.</li>
 <li>An S3 method of <code>result()</code> for <code>MyParallelFuture</code> that returns a <code>FutureResult</code> object (as defined by the <a href="https://cran.r-project.org/package=future">future</a> package) when the future is resolved or otherwise fails to resolve.  If the future is not yet resolved, this method should block until the future is resolved.<br/></li>

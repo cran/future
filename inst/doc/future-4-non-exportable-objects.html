@@ -204,7 +204,7 @@ hr {
 <body>
 <h1>A Future for R: Non-Exportable Objects</h1>
 
-<p>Certain types of objects are tied to a given R session.  Such objects cannot be saved to file by one R process and then later be reloaded in another R process and expected to work correctly.  If attempted, we will often get an informative error but not always.  For the same reason, these type of objects cannot be exported to another R processes(*) for parallel processing.  We refer to these type of objects as &ldquo;non-exportable objects&rdquo;.</p>
+<p>Certain types of objects are tied to a given R session.  Such objects cannot be saved to file by one R process and then later be reloaded in another R process and expected to work correctly.  If attempted, we will often get an informative error but not always.  For the same reason, these type of objects cannot be exported to another R processes(*) for parallel processing regardless of which parallelization framework we use.  We refer to these type of objects as &ldquo;non-exportable objects&rdquo;.</p>
 
 <p>(*) The exception <em>might be</em> when <em>forked</em> processes are used, i.e. <code>plan(multicore)</code>.  However, such attempts to work around the underlying problem, which is non-exportable objects, should be avoided and considered non-stable.  Moreover, such code will fail to parallelize when using other future backends.</p>
 
@@ -286,6 +286,10 @@ f &lt;- future({ cat(&quot;world!&quot;, file = con); flush(con) })
 <td align="left">ncdf4 (custom reference; <em>non-detectable</em>)</td>
 </tr>
 <tr>
+<td align="left"><strong>parallel</strong></td>
+<td align="left">cluster and cluster nodes (<code>connection</code>)</td>
+</tr>
+<tr>
 <td align="left"><strong>raster</strong></td>
 <td align="left">RasterLayer (<code>externalptr</code>; <em>not all</em>)</td>
 </tr>
@@ -306,8 +310,16 @@ f &lt;- future({ cat(&quot;world!&quot;, file = con); flush(con) })
 <td align="left">stanmodel (<code>externalptr</code>)</td>
 </tr>
 <tr>
+<td align="left"><strong>ShortRead</strong></td>
+<td align="left">FastqFile, FastqStreamer, FastqStreamerList (<code>connection</code>)</td>
+</tr>
+<tr>
 <td align="left"><strong>sparklyr</strong></td>
 <td align="left">tbl_spark (<code>externalptr</code>)</td>
+</tr>
+<tr>
+<td align="left"><strong>terra</strong></td>
+<td align="left">SpatRaster, SpatVector (<code>externalptr</code>)</td>
 </tr>
 <tr>
 <td align="left"><strong>udpipe</strong></td>
@@ -324,6 +336,30 @@ f &lt;- future({ cat(&quot;world!&quot;, file = con); flush(con) })
 </tbody></table>
 
 <p>These are illustrated in sections &#39;Packages that rely on external pointers&#39; and &#39;Packages with other types of non-external objects&#39; below.</p>
+
+<h3>Packages with connections</h3>
+
+<h4>Package: parallel</h4>
+
+<pre><code class="r">library(future)
+plan(multisession, workers = 2)
+
+cl &lt;- parallel::makeCluster(2L)
+y &lt;- parSapply(cl, X = 2:3, FUN = sqrt)
+y
+## [1] 1.414214 1.732051
+
+y %&lt;-% parSapply(cl, X = 2:3, FUN = sqrt)
+y
+## Error in summary.connection(connection) : invalid connection
+</code></pre>
+
+<p>If we turn on <code>options(future.globals.onReference = &quot;error&quot;)</code>, we will catch this already when we create the future:</p>
+
+<pre><code class="r">y %&lt;-% parSapply(cl, X = 2:3, FUN = sqrt)
+## Error: Detected a non-exportable reference (&#39;externalptr&#39;) in one of the globals
+## (&#39;cl&#39; of class &#39;SOCKcluster&#39;) used in the future expression
+</code></pre>
 
 <h3>Packages that rely on external pointers</h3>
 
@@ -421,7 +457,7 @@ Error: Detected a non-exportable reference (&#39;externalptr&#39;) in one of the
 globals (&#39;s&#39; of class &#39;RasterLayer&#39;) used in the future expression
 </code></pre>
 
-<p>Note that it is only the RasterLayer object <code>s</code> that carries an external pointer and cannot be passed on to an external worker.  In constract, RasterLayer object <code>r</code> does not have this problem and would be fine to pass on to a worker.</p>
+<p>Note that it is only the RasterLayer object <code>s</code> that carries an external pointer and cannot be passed on to an external worker.  In contrast, RasterLayer object <code>r</code> does not have this problem and would be fine to pass on to a worker.</p>
 
 <h4>Package: Rcpp</h4>
 
@@ -540,6 +576,35 @@ f &lt;- future({
 ## globals (&#39;Double&#39; of class &#39;jclassName&#39;) used in the future expression
 </code></pre>
 
+<h4>Package: ShortRead</h4>
+
+<p>The <strong><a href="https://bioconductor.org/packages/ShortRead/">ShortRead</a></strong> package from Bioconductor implements efficient methods for sampling, iterating, and reading FASTQ files.  Some of the helper objects used cannot be saved to file or exported to a parallel worker, because they comprise of connections and other non-exportable objects.</p>
+
+<p>Here is an example that illustrates how an attempt to use a &#39;FastqStreamer&#39; object created in the main R session fails when used in a parallel worker:</p>
+
+<pre><code class="r">library(future)
+plan(multisession)
+
+# Adopted from example(&quot;FastqStreamer&quot;, package = &quot;ShortRead&quot;)
+library(ShortRead)
+sp &lt;- SolexaPath(system.file(&quot;extdata&quot;, package=&quot;ShortRead&quot;))
+fl &lt;- file.path(analysisPath(sp), &quot;s_1_sequence.txt&quot;)
+fs &lt;- FastqStreamer(fl, 50)
+
+reads %&lt;-% yield(fs)
+reads
+## Error in status(update = TRUE) : invalid FastqStreamer
+</code></pre>
+
+<p>To catch this earlier, and to get a more informative error message, we do as before;</p>
+
+<pre><code class="r">options(future.globals.onReference = &quot;error&quot;)
+
+reads %&lt;-% yield(fs)
+## Error: Detected a non-exportable reference (&#39;externalptr&#39;) in one of the
+## globals (&#39;fs&#39; of class &#39;FastqStreamer&#39;) used in the future expression
+</code></pre>
+
 <h4>Package: sparklyr</h4>
 
 <pre><code class="r">library(future)
@@ -551,11 +616,11 @@ file &lt;- system.file(&quot;misc&quot;, &quot;exDIF.csv&quot;, package = &quot;
 data &lt;- spark_read_csv(sc, &quot;exDIF&quot;, file)
 d %&lt;-% dim(data)
 d
-Error in unserialize(node$con) : 
-  Failed to retrieve the value of MultisessionFuture (&lt;none&gt;) from cluster
-SOCKnode #1 (PID 29864 on localhost &#39;localhost&#39;). The reason reported was
-&#39;unknown input format&#39;. Post-mortem diagnostic: A process with this PID
-exists, which suggests that the localhost worker is still alive.
+## Error in unserialize(node$con) : 
+##   Failed to retrieve the value of MultisessionFuture (&lt;none&gt;) from cluster
+## SOCKnode #1 (PID 29864 on localhost &#39;localhost&#39;). The reason reported was
+## &#39;unknown input format&#39;. Post-mortem diagnostic: A process with this PID
+## exists, which suggests that the localhost worker is still alive.
 </code></pre>
 
 <p>To catch this as soon as possible,</p>
@@ -563,8 +628,45 @@ exists, which suggests that the localhost worker is still alive.
 <pre><code class="r">options(future.globals.onReference = &quot;error&quot;)
 d %&lt;-% dim(data)
 ## Error: Detected a non-exportable reference (&#39;externalptr&#39;) in one of
-the globals (&#39;data&#39; of class &#39;tbl_spark&#39;) used in the future expression
+## the globals (&#39;data&#39; of class &#39;tbl_spark&#39;) used in the future expression
 </code></pre>
+
+<h4>Package: terra</h4>
+
+<pre><code class="r">library(future)
+plan(multisession)
+library(terra)
+
+file &lt;- system.file(&quot;ex/lux.shp&quot;, package = &quot;terra&quot;)
+v &lt;- vect(file)
+dv %&lt;-% dim(v)
+dv
+Error in x@ptr$nrow() : external pointer is not valid
+
+file &lt;- system.file(&quot;ex/elev.tif&quot;, package=&quot;terra&quot;)
+r &lt;- rast(file)
+dr %&lt;-% dim(r)
+dr
+## Error in .External(list(name = &quot;CppMethod__invoke_notvoid&quot;, address = &lt;pointer: (nil)&gt;,  : 
+##  NULL value passed as symbol address
+</code></pre>
+
+<p>To catch this as soon as possible,</p>
+
+<pre><code class="r">options(future.globals.onReference = &quot;error&quot;)
+
+dv %&lt;-% dim(v)
+## Error: Detected a non-exportable reference (&#39;externalptr&#39; of class
+## &#39;RegisteredNativeSymbol&#39;) in one of the globals (&#39;v&#39; of class
+## &#39;SpatVector&#39;) used in the future expression
+
+dr %&lt;-% dim(data)
+## Error: Detected a non-exportable reference (&#39;externalptr&#39; of class
+## &#39;RegisteredNativeSymbol&#39;) in one of the globals (&#39;r&#39; of class
+## &#39;SpatRaster&#39;) used in the future expression
+</code></pre>
+
+<p>For some workarounds, see <code>help(&quot;wrap&quot;, package = &quot;terra&quot;)</code>.</p>
 
 <h4>Package: udpipe</h4>
 
@@ -599,11 +701,11 @@ plan(multisession)
 library(xgboost)
 data(agaricus.train, package = &quot;xgboost&quot;)
 train &lt;- xgb.DMatrix(agaricus.train$data, label = agaricus.train$label)
-print(class(train))
+class(train)
 ## [1] &quot;xgb.DMatrix&quot;
 
 d &lt;- dim(dtrain)
-print(d)
+d
 ## [1] 6513  126
 </code></pre>
 
@@ -611,7 +713,7 @@ print(d)
 
 <pre><code class="r">f &lt;- future(dim(dtrain))
 d &lt;- value(f)
-print(d)
+d
 ## NULL
 </code></pre>
 
@@ -630,8 +732,8 @@ f &lt;- future(dim(dtrain))
 <pre><code class="r">library(future)
 plan(multisession)
 library(xml2)
-xml &lt;- read_xml(&quot;&lt;body&gt;&lt;/body&gt;&quot;)
-f &lt;- future(xml_children(xml))
+doc &lt;- read_xml(&quot;&lt;body&gt;&lt;/body&gt;&quot;)
+f &lt;- future(xml_children(doc))
 value(f)
 ## Error: external pointer is not valid
 </code></pre>
@@ -642,6 +744,28 @@ value(f)
 f &lt;- future(xml_children(xml))
 ## Error: Detected a non-exportable reference (&#39;externalptr&#39;) in one of the
 ## globals (&#39;xml&#39; of class &#39;xml_document&#39;) used in the future expression
+</code></pre>
+
+<p>One workaround when dealing with non-exportable objects is to look for ways to encode the object such that it can be exported, and the decoded on the receiving end.  With <strong>xml2</strong>, we can use <code>xml2::xml_serialize()</code> and <code>xml2::xml_unserialize()</code> to do this.  Here is how we can rewrite the above example such that we can pass <strong>xml2</strong> object back and forth between the main R session and R workers:</p>
+
+<pre><code class="r">## Encode the &#39;xml_document&#39; object &#39;doc&#39; as a &#39;raw&#39; object
+doc_raw &lt;- xml_serialize(doc, connection = NULL)
+
+f &lt;- future({
+  ## In the future, reconstruct the &#39;xml_document&#39; object
+  ## from the &#39;raw&#39; object
+  doc &lt;- xml_unserialize(doc_raw)
+
+  ## Continue as usual
+  children &lt;- xml_children(doc)
+
+  ## Send back a &#39;raw&#39; representation of the &#39;xml_nodeset&#39;
+  ## object &#39;children&#39;
+  xml_serialize(children, connection = NULL)
+})
+
+## Reconstruct the &#39;xml_nodeset&#39; object in the main R session
+children &lt;- xml_unserialize(value(f))
 </code></pre>
 
 <h3>Packages with other types of non-external objects</h3>
@@ -695,10 +819,6 @@ y &lt;- value(f)
 y
 ## [1] 42
 </code></pre>
-
-<hr/>
-
-<p>Copyright Henrik Bengtsson, 2020</p>
 
 </body>
 
