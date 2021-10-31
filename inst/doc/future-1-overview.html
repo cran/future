@@ -311,11 +311,6 @@ Hello world!
 <td align="left">sequentially and in the current R process</td>
 </tr>
 <tr>
-<td align="left"><code>transparent</code></td>
-<td align="left">all</td>
-<td align="left">as sequential w/ early signaling and w/out local (for debugging)</td>
-</tr>
-<tr>
 <td align="left"><em>asynchronous:</em></td>
 <td align="left"></td>
 <td align="left"><em>parallel</em>:</td>
@@ -380,7 +375,7 @@ Hello world!
 
 <h3>Synchronous Futures</h3>
 
-<p>Synchronous futures are resolved one after another and most commonly by the R process that creates them.  When a synchronous future is being resolved it blocks the main process until resolved.  There are two types of synchronous futures in the future package, <em>sequential</em> and <em>transparent</em>.</p>
+<p>Synchronous futures are resolved one after another and most commonly by the R process that creates them.  When a synchronous future is being resolved it blocks the main process until resolved.  </p>
 
 <h4>Sequential Futures</h4>
 
@@ -418,10 +413,6 @@ Future &#39;c&#39; ...
 </code></pre>
 
 <p>Since eager sequential evaluation is taking place, each of the three futures is resolved instantaneously in the moment it is created.  Note also how <code>pid</code> in the calling environment, which was assigned the process ID of the current process, is neither overwritten nor removed.  This is because futures are evaluated in a local environment.  Since synchronous (uni-)processing is used, future <code>b</code> is resolved by the main R process (still in a local environment), which is why the value of <code>b</code> and <code>pid</code> are the same.</p>
-
-<h4>Transparent Futures</h4>
-
-<p>For troubleshooting, <em>transparent</em> futures can be used by specifying <code>plan(transparent)</code>.  A transparent future is technically a sequential future with instant signaling of conditions (including errors and warnings) and where evaluation, and therefore also assignments, take place in the calling environment.  Transparent futures are particularly useful for troubleshooting errors that are otherwise hard to narrow down.</p>
 
 <h3>Asynchronous Futures</h3>
 
