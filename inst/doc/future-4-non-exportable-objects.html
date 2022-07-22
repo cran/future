@@ -270,6 +270,10 @@ f &lt;- future({ cat(&quot;world!&quot;, file = con); flush(con) })
 <td align="left">connection (<code>externalptr</code>)</td>
 </tr>
 <tr>
+<td align="left"><strong>cpp11</strong></td>
+<td align="left">E.g. functions created by <code>cpp_source()</code></td>
+</tr>
+<tr>
 <td align="left"><strong>DBI</strong></td>
 <td align="left">DBIConnection (<code>externalptr</code>)</td>
 </tr>
@@ -389,6 +393,39 @@ y
 
 <p>Below are some examples of packages who produce non-exportable objects with <em>external pointer</em>:s.</p>
 
+<h4>Package: cpp11</h4>
+
+<p>Another example is <strong><a href="https://cran.r-project.org/package=cpp11">cpp11</a></strong>, which allows us to easily create R functions that are implemented in C++, e.g.</p>
+
+<pre><code class="r">cpp11::cpp_source(code = &#39;
+#include &quot;cpp11/doubles.hpp&quot;
+using namespace cpp11;
+
+[[cpp11::register]]
+int my_length(doubles x) {
+    return x.size();
+}
+&#39;)
+</code></pre>
+
+<p>so that:</p>
+
+<pre><code>x &lt;- rnorm(10)
+my_length(x)
+## [1] 10
+</code></pre>
+
+<p>However, this function cannot be exported to another R process:</p>
+
+<pre><code class="r">library(future)
+plan(multisession)
+x &lt;- rnorm(10)
+n %&lt;-% my_length(x)
+n
+#&gt; Error in .Call(&quot;_code_1748ff617940b9_my_length&quot;, x, PACKAGE = &quot;code_1748ff617940b9&quot;) : 
+#&gt;   &quot;_code_1748ff617940b9_my_length&quot; not available for .Call() for package &quot;code_1748ff617940b9&quot;
+</code></pre>
+
 <h4>Package: DBI</h4>
 
 <p><strong><a href="https://cran.r-project.org/package=DBI">DBI</a></strong> provides a unified database interface for communication between R and various database engines.  Analogously to regular connections in R, DBIConnection objects can <em>not</em> safely be exported to another R process, e.g.</p>
@@ -405,7 +442,7 @@ dummy %&lt;-% print(con)
 
 <h4>Package: inline</h4>
 
-<p>Another example is <strong><a href="https://cran.r-project.org/package=inline">inline</a></strong>, which allow us to easily create R functions that are implemented in C and C++, e.g.</p>
+<p>Another example is <strong><a href="https://cran.r-project.org/package=inline">inline</a></strong>, which allows us to easily create R functions that are implemented in C and C++, e.g.</p>
 
 <pre><code class="r">library(inline)
 code &lt;- &quot;
@@ -497,6 +534,7 @@ v &lt;- value(f)
 
 <pre><code class="r">library(future)
 plan(multisession)
+options(future.globals.onReference = &quot;error&quot;)
 
 library(raster)
 r &lt;- raster(system.file(&quot;external/test.grd&quot;, package = &quot;raster&quot;))
@@ -515,9 +553,9 @@ globals (&#39;s&#39; of class &#39;RasterLayer&#39;) used in the future expressi
 
 <h4>Package: Rcpp</h4>
 
-<p>Another example is <strong><a href="https://cran.r-project.org/package=Rcpp">Rcpp</a></strong>, which allow us to easily create R functions that are implemented in C++, e.g.</p>
+<p>Similarly to <strong>cpp11</strong>, <strong><a href="https://cran.r-project.org/package=Rcpp">Rcpp</a></strong> can be use to create R functions that are implemented in C++, e.g.</p>
 
-<pre><code class="r">Rcpp::sourceCpp(code = &quot;
+<pre><code class="r">Rcpp::sourceCpp(code = &#39;
 #include &lt;Rcpp.h&gt;
 using namespace Rcpp;
 
@@ -525,7 +563,7 @@ using namespace Rcpp;
 int my_length(NumericVector x) {
     return x.size();
 }
-&quot;)
+&#39;)
 </code></pre>
 
 <p>so that:</p>
@@ -539,6 +577,7 @@ my_length(x)
 
 <pre><code class="r">library(future)
 plan(multisession)
+x &lt;- rnorm(10)
 n %&lt;-% my_length(x)
 n
 ## Error in .Call(&lt;pointer: (nil)&gt;, x) : NULL value passed as symbol address
@@ -720,11 +759,35 @@ dr %&lt;-% dim(data)
 ## &#39;SpatRaster&#39;) used in the future expression
 </code></pre>
 
-<p>For some workarounds, see <code>help(&quot;wrap&quot;, package = &quot;terra&quot;)</code>.</p>
+<p>Functions <code>wrap()</code> and <code>vect()</code> of the <strong>terra</strong> package can be used as workaround to marshal and unmarshal non-exportable <strong>terra</strong> objects, e.g.</p>
+
+<pre><code class="r">library(future)
+plan(multisession)
+library(terra)
+
+file &lt;- system.file(&quot;ex/lux.shp&quot;, package = &quot;terra&quot;)
+v &lt;- vect(file)
+.v &lt;- wrap(v)
+dv %&lt;-% { v &lt;- vect(.v); dim(v) }
+rm(.v) ## not needed anymore
+dv
+[1] 12  6
+</code></pre>
+
+<p>and</p>
+
+<pre><code class="r">file &lt;- system.file(&quot;ex/elev.tif&quot;, package=&quot;terra&quot;)
+r &lt;- rast(file)
+.r &lt;- wrap(v)
+dr %&lt;-% { r &lt;- vect(.r); dim(r) }
+rm(.r) ## not needed anymore
+dr
+[1] 12  6
+</code></pre>
+
+<p>For more details, see <code>help(&quot;wrap&quot;, package = &quot;terra&quot;)</code>.</p>
 
 <h4>Package: udpipe</h4>
-
-<p>The <strong><a href="https://cran.r-project.org/package=udpipe">udpipe</a></strong> package use non-exportable objects;</p>
 
 <pre><code class="r">library(future)
 plan(multisession)
