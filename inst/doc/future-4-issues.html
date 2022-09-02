@@ -533,6 +533,28 @@ Error: Invalid usage of futures: A future whose value has not yet been collected
 
 <p>Importantly, we must not use just <code>warning(e)</code> or <code>message(e)</code>, although it appears to work at a first glance.  If we do, we will end up re-signaling the error but without interruption.  It is an important distinction that will reveal itself if used within futures.  The above example with <code>warning(conditionMessage(e))</code> will work as expected, but if we use <code>warning(e)</code> the future framework will produce an error, not a warning.</p>
 
+<h3>Using <code>source()</code> in a future</h3>
+
+<p>Avoid using <code>source()</code> inside futures. It is always better to source external R scripts at the top of your main R script, e.g.</p>
+
+<pre><code class="r">library(future)
+source(&quot;./my-script.R&quot;)
+
+f &lt;- future({
+  ...
+})
+</code></pre>
+
+<p>However, if you find yourself having to source a script inside a future, or inside a function, make sure to specify argument <code>local = TRUE</code>, e.g.</p>
+
+<pre><code class="r">f &lt;- future({
+  source(&quot;./my-script.R&quot;, local = TRUE)
+  ...
+})
+</code></pre>
+
+<p>This is because <code>source()</code> defaults to <code>local = FALSE</code>, which has side effects.  When using <code>local = FALSE</code>, any functions or variables defined by the R script are assigned to the global environment - not the calling environment as we might expect.  This may make little different when calling <code>source()</code> from the R prompt, or from another script.  However, when called from inside a function, inside <code>local()</code>, or inside a future, it might result in unexpected behavior. It is similar to using <code>assign(&quot;a&quot;, 42, envir = globalenv())</code>, which is known be a bad practice.  To be on the safe side, it is almost always better call <code>source()</code> with <code>local = TRUE</code>.</p>
+
 <h3>Clashes with other packages</h3>
 
 <p>Sometimes other packages have functions or operators with the same name as the future package, and if those packages are attached <em>after</em> the future package, their objects will mask the ones of the future package.  For instance, the igraph package also defines a <code>%&lt;-%</code> operator which clashes with the one in future <em>if used at the prompt or in a script</em> (it is not a problem inside package because there we explicitly import objects in a known order).  Here is what we might get:</p>
