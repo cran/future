@@ -165,15 +165,12 @@ hr {
 
 <body>
 <h1>A Future for R: How the Future Framework is Validated</h1>
-
 <p>Since correctness and reproducibility is essential to all data processing, validation is a top priority and part of the design and implementation throughout the future ecosystem.  Several types of testing are performed.</p>
-
 <p>First, all the essential core packages part of the future framework,
 <strong><a href="https://CRAN.R-Project.org/package=future">future</a></strong>, <strong><a href="https://CRAN.R-Project.org/package=globals">globals</a></strong>, and <strong><a href="https://CRAN.R-Project.org/package=listenv">listenv</a></strong>, implement a rich set of package tests.
 These are validated regularly across the wide-range of operating
 systems (Linux, Solaris, macOS, and MS Windows) and R versions available
 on CRAN, via continuous integration (CI) (<a href="https://github.com/features/actions">GitHub Actions</a>), and on <a href="https://builder.r-hub.io/">R-hub</a>.</p>
-
 <p>Second, for each new release, these packages undergo full reverse-package
 dependency checks using <strong><a href="https://github.com/r-lib/revdepcheck">revdepcheck</a></strong>.
 As of June 2022, the <strong>future</strong> package is tested against 240+
@@ -181,7 +178,6 @@ direct reverse-package dependencies available on CRAN and Bioconductor.
 These checks are performed on Linux with both the default settings and
 when forcing tests to use multisession workers (SOCK clusters), which further
 validates that globals and packages are identified correctly.</p>
-
 <p>Third, a suite of <em>Future API conformance tests</em> available in the
 <strong><a href="https://CRAN.R-Project.org/package=future">future.tests</a></strong> package validates the
 correctness of all future backends.  Any new future backend developed, must
@@ -198,7 +194,6 @@ their software with all existing backends. Even if they would achieve that,
 there may be additional third-party future backends that they are not aware
 of, that they do not have the possibility to test with, or that yet have not
 been developed.</p>
-
 <p>Fourth, since <strong><a href="https://CRAN.R-Project.org/package=foreach">foreach</a></strong> is used by a large number of essential
 CRAN packages, it provides an excellent opportunity for supplementary
 validation. Specifically, we dynamically tweak the examples of
@@ -215,12 +210,10 @@ declare package dependencies.  The exception is when using the sequential
 <em>doSEQ</em> adaptor (default), fork-based ones such as <strong><a href="https://CRAN.R-Project.org/package=doMC">doMC</a></strong>, or
 the generic <strong><a href="https://CRAN.R-Project.org/package=doFuture">doFuture</a></strong>, which supports any future backend and
 relies on the future framework for handling globals and packages(*)</p>
-
 <p>Lastly, analogously to above reverse-dependency checks of each new release,
 CRAN and Bioconductor continuously run checks on all these direct, but
 also indirect, reverse dependencies, which further increases the validation
 of the <em>Future API</em> and the future ecosystem at large.</p>
-
 <p>(*) There is a plan to update <strong><a href="https://CRAN.R-Project.org/package=foreach">foreach</a></strong> to use the exact same static-code-analysis method as the <strong><a href="https://CRAN.R-Project.org/package=future">future</a></strong> package use for identifying globals.  As the maintainer of the future framework, I collaborate with the maintainer of the <strong><a href="https://CRAN.R-Project.org/package=foreach">foreach</a></strong> package to implement this.</p>
 
 </body>
