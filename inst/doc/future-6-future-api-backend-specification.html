@@ -5,156 +5,74 @@
 
 <title>Future API Backend Specification</title>
 
-<script type="text/javascript">
-window.onload = function() {
-  var imgs = document.getElementsByTagName('img'), i, img;
-  for (i = 0; i < imgs.length; i++) {
-    img = imgs[i];
-    // center an image if it is the only element of its parent
-    if (img.parentElement.childElementCount === 1)
-      img.parentElement.style.textAlign = 'center';
-  }
-};
-</script>
-
 
 
 
 
 <style type="text/css">
 body, td {
-   font-family: sans-serif;
-   background-color: white;
-   font-size: 13px;
+  font-family: sans-serif;
+  background-color: white;
+  font-size: 13px;
 }
-
 body {
   max-width: 800px;
   margin: auto;
   padding: 1em;
-  line-height: 20px;
+  line-height: 1.5;
 }
-
 tt, code, pre {
-   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+  font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
 }
-
-h1 {
-   font-size:2.2em;
-}
-
-h2 {
-   font-size:1.8em;
-}
-
-h3 {
-   font-size:1.4em;
-}
-
-h4 {
-   font-size:1.0em;
-}
-
-h5 {
-   font-size:0.9em;
-}
-
-h6 {
-   font-size:0.8em;
-}
-
-a:visited {
-   color: rgb(50%, 0%, 50%);
-}
-
-pre, img {
-  max-width: 100%;
-}
-pre {
-  overflow-x: auto;
-}
-pre code {
-   display: block; padding: 0.5em;
-}
-
+a:visited { color: #80007f; }
+pre, img { max-width: 100%; }
 code {
   font-size: 92%;
   border: 1px solid #ccc;
 }
-
-code[class] {
-  background-color: #F8F8F8;
+code[class] { background-color: #F8F8F8; }
+code.language-undefined { background-color: inherit; }
+table {
+  margin: auto;
+  border-top: 1px solid #666;
+  border-bottom: 1px solid #666;
 }
-
-table, td, th {
-  border: none;
-}
-
+table thead th { border-bottom: 1px solid #ddd; }
+th, td { padding: 5px; }
+thead, tfoot, tr:nth-child(even) { background: #eee; }
 blockquote {
-   color:#666666;
-   margin:0;
-   padding-left: 1em;
-   border-left: 0.5em #EEE solid;
+  color:#666;
+  margin:0;
+  padding-left: 1em;
+  border-left: 0.5em #eee solid;
 }
-
-hr {
-   height: 0px;
-   border-bottom: none;
-   border-top-width: thin;
-   border-top-style: dotted;
-   border-top-color: #999999;
-}
+hr { border: 1px #ddd dashed; }
 
 @media print {
-   * {
-      background: transparent !important;
-      color: black !important;
-      filter:none !important;
-      -ms-filter: none !important;
-   }
-
-   body {
-      font-size:12pt;
-      max-width:100%;
-   }
-
-   a, a:visited {
-      text-decoration: underline;
-   }
-
-   hr {
-      visibility: hidden;
-      page-break-before: always;
-   }
-
-   pre, blockquote {
-      padding-right: 1em;
-      page-break-inside: avoid;
-   }
-
-   tr, img {
-      page-break-inside: avoid;
-   }
-
-   img {
-      max-width: 100% !important;
-   }
-
-   @page :left {
-      margin: 15mm 20mm 15mm 10mm;
-   }
-
-   @page :right {
-      margin: 15mm 10mm 15mm 20mm;
-   }
-
-   p, h2, h3 {
-      orphans: 3; widows: 3;
-   }
-
-   h2, h3 {
-      page-break-after: avoid;
-   }
+  * {
+    background: transparent !important;
+    color: black !important;
+    filter:none !important;
+  }
+  body {
+    font-size: 12pt;
+    max-width: 100%;
+  }
+  a, a:visited { text-decoration: underline; }
+  hr {
+    visibility: hidden;
+    page-break-before: always;
+  }
+  pre, blockquote {
+    padding-right: 1em;
+    page-break-inside: avoid;
+  }
+  tr, img { page-break-inside: avoid; }
+  img { max-width: 100% !important; }
+  @page :left { margin: 15mm 20mm 15mm 10mm; }
+  @page :right { margin: 15mm 10mm 15mm 20mm; }
+  p, h2, h3 { orphans: 3; widows: 3; }
+  h2, h3 { page-break-after: avoid; }
 }
 </style>
 
@@ -165,7 +83,7 @@ hr {
 
 <body>
 <h1>Future API Backend Specification</h1>
-<p>Version 0.1.1</p>
+<p>Version 0.1.2</p>
 <h2>Introduction</h2>
 <p>This document is written to serve as a reference for developers who are developing a future backend to the future framework as implemented in the <a href="https://cran.r-project.org/package=future">future</a> package for R that available on CRAN.  The Future Application Programming Interface (API) has three fundamental functions at its core:</p>
 <ul>
@@ -203,6 +121,7 @@ hr {
 <p>Any currying arguments that can be specified when setting the future plan must be explicit arguments of the constructor function such that they appear as named elements in <code>formals(myparallel)</code>.  Currying arguments are arguments that can be “tweaked” by the end-user, e.g. <code>plan(myparallel, workers = 2)</code>.</p>
 <p>The value of the constructor function should be invisible and a <code>MyParallelFuture</code> object that inherits from <code>Future</code>.  This is achieved by calling <code>Future()</code>, with all matching arguments passed along and then prepending <code>&quot;MyParallelFuture&quot;</code> to the class attribute of the returned <code>Future</code> object.</p>
 <p>Before returning the <code>Future</code> object, the constructor function should launch the future if, and only if, the <code>lazy</code> element of the <code>Future</code> object (e.g. <code>f$lazy</code>) is <code>FALSE</code> (default).  The constructor function must never evaluate the expression <code>expr</code> if <code>lazy</code> is <code>TRUE</code>.</p>
+<p>The constructor function must not update the RNG state.</p>
 <h3>run() method</h3>
 <p>An S3 method <code>run()</code> for <code>MyParallelFuture</code> that takes a <code>Future</code> object as its first argument is required.  It should accept additional arguments via <code>...</code>, which are currently not used.</p>
 <p>The <code>run()</code> method should invisibly return the <code>Future</code> object, which may be a modified version of the input <code>Future</code> object.</p>
@@ -210,12 +129,14 @@ hr {
 <p>The <code>run()</code> method is responsible for evaluation the expression returned by <code>getExpression()</code> with the <code>Future</code> object as the first argument.  The evaluation of this expression should respect any global variables in the <code>FutureGlobals</code> object returned by <code>globals()</code> with the <code>Future</code> object as the first argument.  The evaluation should also respect any package names returned by <code>packages()</code> with the <code>Future</code> object as the first argument.</p>
 <p>If the backend provides parallel processing, then <code>run()</code> should return the future as soon as possible and without waiting for it to be resolved.  If all workers are occupied, then <code>run()</code> is responsible for waiting until a worker becomes available and then launch the future on that worker and immediatedly return the future.</p>
 <p>The <code>run()</code> method may produce <code>FutureError</code> error as created by <code>FutureError()</code> in case it fails to launch the future on the worker or the worker has terminated unexpectedly.</p>
+<p>The <code>run()</code> method must not update the RNG state.</p>
 <h3>resolved() method</h3>
 <p>An S3 method <code>resolved()</code> for <code>MyParallelFuture</code> that takes a <code>Future</code> object as its first argument and return either <code>TRUE</code> or <code>FALSE</code> is required.  It should accept additional arguments via <code>...</code>, which are currently not used.</p>
 <p>The method may be called zero or more times.</p>
 <p>The method should return <code>FALSE</code> as long as the future is unresolved. It may also return <code>FALSE</code> if it fail to establish the state of the future within a reasonable time period (“timeout”).  It should return <code>TRUE</code> as soon as it can be established that the future is resolved.  After it has returned <code>TRUE</code> once, any succeeding calls should return <code>TRUE</code>.</p>
 <p>If <code>resolved()</code> is called on a future that yet has not been launched, it should launch the future by calling <code>run()</code>.  This is the only occasion when <code>resolved()</code> may block.  In all other cases, it should return promptly.</p>
 <p>The <code>resolved()</code> method may produce <code>FutureError</code> error as created by <code>FutureError()</code> in case communication with the worker has broken down or the worker has terminated unexpectedly.</p>
+<p>The <code>resolved()</code> method must not update the RNG state.</p>
 <h3>result() method</h3>
 <p>An S3 method <code>result()</code> for <code>MyParallelFuture</code> that takes a <code>Future</code> object as its first argument and return a <code>FutureResult</code> object is required.  It should accept additional arguments via <code>...</code>, which are currently not used.</p>
 <p>The method may be called zero or more times.</p>
@@ -223,7 +144,10 @@ hr {
 <p>If <code>result()</code> is called on a future that is not yet resolved, it should block until the future is resolved.</p>
 <p>The value of <code>result()</code> should be the value from evaluating the <code>getExpression()</code> expression that <code>run()</code> launched.</p>
 <p>The <code>result()</code> method may produce <code>FutureError</code> error as created by <code>FutureError()</code> in case communication with the worker has broken down or the worker has terminated unexpectedly.</p>
+<p>The <code>result()</code> method must not update the RNG state.</p>
 
+
+<script src="https://cdn.jsdelivr.net/combine/npm/@xiee/utils/js/center-img.min.js" async></script>
 </body>
 
 </html>
