@@ -191,7 +191,7 @@ In order for <code>a</code> to be identified, the future framework would need to
  6 22 12
 </code></pre>
 <h4>glue::glue() - object not found</h4>
-<p>The future framework will fail to identify globals that are declared via character strings.  The above section gives an example of this where <code>get()</code> is used and explains why it is not feasible to automatically identify string-embedded globals from such code.  Another example, is when using <code>glue()</code> from the glue package to generate strings dynamically, e.g.</p>
+<p>The future framework will fail to identify globals that are declared via character strings.  The above section gives an example of this where <code>get()</code> is used and explains why it is not feasible to automatically identify string-embedded globals from such code.  Another example, is when using <code>glue()</code> from the <strong><a href="https://cran.r-project.org/package=glue">glue</a></strong> package to generate strings dynamically, e.g.</p>
 <pre><code class="language-r">&gt; library(glue)
 &gt; a &lt;- 42
 &gt; s &lt;- glue(&quot;The value of a is {a}.&quot;)
@@ -219,7 +219,7 @@ The value of a is 42.
 The value of a is 42.
 </code></pre>
 <h3>Missing packages (false negatives)</h3>
-<p>Occasionally, the static-code inspection of the future expression fails to identify packages needed to evaluated the expression.  This may occur when an expression uses S3 generic functions part of one package whereas the required S3 method is in another package.  For example, in the below future generic function <code>[</code> is used on data.table object <code>DT</code>, which requires S3 method <code>[.data.table</code> from the data.table package.  However, the future and global packages fail to identify data.table as a required package, which results in an evaluation error:</p>
+<p>Occasionally, the static-code inspection of the future expression fails to identify packages needed to evaluated the expression.  This may occur when an expression uses S3 generic functions part of one package whereas the required S3 method is in another package.  For example, in the below future generic function <code>[</code> is used on data.table object <code>DT</code>, which requires S3 method <code>[.data.table</code> from the <strong><a href="https://cran.r-project.org/package=data.table">data.table</a></strong> package.  However, the <strong>future</strong> and <strong><a href="https://cran.r-project.org/package=globals">globals</a></strong> packages fail to identify <strong>data.table</strong> as a required package, which results in an evaluation error:</p>
 <pre><code class="language-r">&gt; library(future)
 &gt; plan(multisession)
 
@@ -229,8 +229,8 @@ The value of a is 42.
 &gt; y
 Error: object 'b' not found
 </code></pre>
-<p>The above error occurs because, contrary to the master R process, the R worker that evaluated the future expression does not have data.table loaded.  Instead the evaluation falls back to the <code>[.data.frame</code> method, which is not what we want.</p>
-<p>Until the future framework manages to identify data.table as a required package (which is the goal), we can guide future by specifying additional packages needed:</p>
+<p>The above error occurs because, contrary to the master R process, the R worker that evaluated the future expression does not have <strong>data.table</strong> loaded.  Instead the evaluation falls back to the <code>[.data.frame</code> method, which is not what we want.</p>
+<p>Until the future framework manages to identify <strong>data.table</strong> as a required package (which is the goal), we can guide future by specifying additional packages needed:</p>
 <pre><code class="language-r">&gt; y %&lt;-% DT[, sum(b)] %packages% &quot;data.table&quot;
 &gt; y
 [1] 6
@@ -242,7 +242,7 @@ Error: object 'b' not found
 </code></pre>
 <p>Note, do <em>not</em> use <code>library()</code> or <code>loadNamespace()</code> to resolve these problems. It is always better to use the above <code>packages</code> approach.</p>
 <h2>Non-exportable objects</h2>
-<p>Certain types of objects are tied to a given R session and cannot be passed along to another R process (a “worker”).  An example of a non-exportable object is is XML objects of the xml2 package.  If we attempt to use those in parallel processing, we may get a error when the future is evaluated (or just invalid results depending on how they are used), e.g.</p>
+<p>Certain types of objects are tied to a given R session and cannot be passed along to another R process (a “worker”).  An example of a non-exportable object is is XML objects of the <strong><a href="https://cran.r-project.org/package=xml2">xml2</a></strong> package.  If we attempt to use those in parallel processing, we may get a error when the future is evaluated (or just invalid results depending on how they are used), e.g.</p>
 <pre><code class="language-r">&gt; library(future)
 &gt; plan(multisession)
 &gt; library(xml2)
@@ -346,7 +346,7 @@ f &lt;- future({
 </code></pre>
 <p>This is because <code>source()</code> defaults to <code>local = FALSE</code>, which has side effects.  When using <code>local = FALSE</code>, any functions or variables defined by the R script are assigned to the global environment - not the calling environment as we might expect.  This may make little different when calling <code>source()</code> from the R prompt, or from another script.  However, when called from inside a function, inside <code>local()</code>, or inside a future, it might result in unexpected behavior. It is similar to using <code>assign(&quot;a&quot;, 42, envir = globalenv())</code>, which is known be a bad practice.  To be on the safe side, it is almost always better call <code>source()</code> with <code>local = TRUE</code>.</p>
 <h3>Clashes with other packages</h3>
-<p>Sometimes other packages have functions or operators with the same name as the future package, and if those packages are attached <em>after</em> the future package, their objects will mask the ones of the future package.  For instance, the igraph package also defines a <code>%&lt;-%</code> operator which clashes with the one in future <em>if used at the prompt or in a script</em> (it is not a problem inside package because there we explicitly import objects in a known order).  Here is what we might get:</p>
+<p>Sometimes other packages have functions or operators with the same name as the future package, and if those packages are attached <em>after</em> the <strong>future</strong> package, their objects will mask the ones of the <strong>future</strong> package.  For instance, the <strong><a href="https://cran.r-project.org/package=igraph">igraph</a></strong> package also defines a <code>%&lt;-%</code> operator which clashes with the one in future <em>if used at the prompt or in a script</em> (it is not a problem inside package because there we explicitly import objects in a known order).  Here is what we might get:</p>
 <pre><code class="language-r">&gt; library(future)
 &gt; library(igraph)
 
@@ -368,11 +368,11 @@ The following object is masked from 'package:base':
 Error in get(&quot;.igraph.from&quot;, parent.frame()) : 
   object '.igraph.from' not found
 </code></pre>
-<p>Here we get an error because <code>%&lt;-%</code> is from igraph and not the future assignment operator as we wanted.  This can be confirmed as:</p>
+<p>Here we get an error because <code>%&lt;-%</code> is from <strong>igraph</strong> and not the future assignment operator as we wanted.  This can be confirmed as:</p>
 <pre><code class="language-r">&gt; environment(`%&lt;-%`)
 &lt;environment: namespace:igraph&gt;
 </code></pre>
-<p>To avoid this problem, attach the two packages in opposite order such that future comes last and thereby overrides igraph, i.e.</p>
+<p>To avoid this problem, attach the two packages in opposite order such that <strong>future</strong> comes last and thereby overrides <strong>igraph</strong>, i.e.</p>
 <pre><code class="language-r">&gt; library(igraph)
 &gt; library(future)
 
@@ -386,7 +386,7 @@ The following objects are masked from 'package:igraph':
 &gt; y
 [1] 42
 </code></pre>
-<p>An alternative is to detach the future package and re-attach it, which will achieve the same thing:</p>
+<p>An alternative is to detach the <strong>future</strong> package and re-attach it, which will achieve the same thing:</p>
 <pre><code class="language-r">&gt; detach(&quot;package:future&quot;)
 &gt; library(future)
 </code></pre>
@@ -408,6 +408,17 @@ Error in x %&lt;-% 2 * runif(1) : non-numeric argument to binary operator
 [1] 1.030209
 </code></pre>
 <p>Parentheses will also do.  For details on precedence on operators in R, see Section ‘Infix and prefix operators’ in the ‘R Language Definition’ document.</p>
+<h3>Error: invalid ‘type’ (environment) of argument with magrittr</h3>
+<p>Another example where the future assignment operator <code>%&lt;-%</code> requires curly brackets is when using the <strong><a href="https://cran.r-project.org/package=magrittr">magrittr</a></strong> infix operator <code>%&gt;%</code>, e.g.</p>
+<pre><code class="language-r">&gt; library(magrittr)
+&gt; x %&lt;-% 1:100 %&gt;% sum
+Error in sum(.) : invalid 'type' (environment) of argument
+</code></pre>
+<p>The reason for this error is that <code>x %&lt;-% 1:100</code> is passed to <code>sum()</code> by <code>%&gt;%</code>.  To fix this, use:</p>
+<pre><code class="language-r">&gt; x %&lt;-% { 1:100 %&gt;% sum }
+&gt; x
+[1] 5050
+</code></pre>
 <h3>R CMD check NOTEs</h3>
 <p>The code inspection run by <code>R CMD check</code> will not recognize the future assignment operator <code>%&lt;-%</code> as an assignment operator, which is not surprising because <code>%&lt;-%</code> is technically an infix operator.  This means that if you for instance use the following code in your package:</p>
 <pre><code class="language-r">foo &lt;- function() {
