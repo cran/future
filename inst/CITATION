@@ -1,4 +1,4 @@
-bib <- utils::bibentry(
+utils::bibentry(
   header = "Please cite 'future' and the future framework using the following references:",
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

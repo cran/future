@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <title>A Future for R: Text and Message Output</title>
 
@@ -21,6 +22,10 @@ body {
   margin: auto;
   padding: 1em;
   line-height: 1.5;
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
 }
 tt, code, pre {
   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
@@ -48,6 +53,7 @@ blockquote {
   border-left: 0.5em #eee solid;
 }
 hr { border: 1px #ddd dashed; }
+.frontmatter { text-align: center; }
 
 @media print {
   * {
@@ -79,10 +85,20 @@ hr { border: 1px #ddd dashed; }
 
 <meta name="keywords" content="R, package, vignette, future, promise, output, standard output, stdout, standard error, stderr, message, condition">
 <meta name="author" content="Henrik Bengtsson">
-
 </head>
 
 <body>
+<div class="include-before">
+
+</div>
+
+<div class="frontmatter">
+<div class="title"><h1>A Future for R: Text and Message Output</h1></div>
+<div class="author"><h2></h2></div>
+<div class="date"><h3></h3></div>
+</div>
+
+<div class="body">
 <h1>A Future for R: Text and Message Output</h1>
 <p>Futures will <em>relay</em> output produced by functions such as <code>cat()</code>, <code>print()</code> and <code>str()</code>.  More specifically, output sent to the standard output (stdout) while a future is evaluated will be captured and <em>re-outputted (“relayed”) when the value of the future is queried</em>.  Messages produced by <code>message()</code>, which formally are R conditions are also captured and resignaled (“relayed”) as messages in the main R session.  Importantly, this works identically regardless of future backend used.</p>
 <p>For simplicitly, lets start with an illustration on how standard output (“stdout”) is captured and relayed:</p>
@@ -235,8 +251,16 @@ ping
 <h2>Known limitations</h2>
 <p>It is only the standard output that is relayed.  It is <em>not possible</em> to relay output send to the standard error (stderr), e.g. output by <code>cat(..., file = stderr())</code> will be lost.  This is due to a <a href="https://github.com/HenrikBengtsson/Wishlist-for-R/issues/55">limitation in R</a>, preventing us from capturing stderr in a reliable way, particularity across all backends.  However, note that the captured messages by <code>message()</code> are outputted to stderr (as expected) when resignaled/relayed.</p>
 
+</div>
+
+<div class="include-after">
+
+</div>
 
 <script src="https://cdn.jsdelivr.net/combine/npm/@xiee/utils/js/center-img.min.js" async></script>
+<script>
+
+</script>
 </body>
 
 </html>

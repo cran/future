@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <title>A Future for R: How the Future Framework is Validated</title>
 
@@ -20,6 +21,10 @@ body {
   margin: auto;
   padding: 1em;
   line-height: 1.5;
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
 }
 tt, code, pre {
   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
@@ -47,6 +52,7 @@ blockquote {
   border-left: 0.5em #eee solid;
 }
 hr { border: 1px #ddd dashed; }
+.frontmatter { text-align: center; }
 
 @media print {
   * {
@@ -78,10 +84,20 @@ hr { border: 1px #ddd dashed; }
 
 <meta name="keywords" content="R, package, vignette, future, promise">
 <meta name="author" content="Henrik Bengtsson">
-
 </head>
 
 <body>
+<div class="include-before">
+
+</div>
+
+<div class="frontmatter">
+<div class="title"><h1>A Future for R: How the Future Framework is Validated</h1></div>
+<div class="author"><h2></h2></div>
+<div class="date"><h3></h3></div>
+</div>
+
+<div class="body">
 <h1>A Future for R: How the Future Framework is Validated</h1>
 <p>Since correctness and reproducibility is essential to all data processing, validation is a top priority and part of the design and implementation throughout the future ecosystem.  Several types of testing are performed.</p>
 <p>First, all the essential core packages part of the future framework,
@@ -134,8 +150,16 @@ also indirect, reverse dependencies, which further increases the validation
 of the <em>Future API</em> and the future ecosystem at large.</p>
 <p>(*) There is a plan to update <strong><a href="https://CRAN.R-Project.org/package=foreach">foreach</a></strong> to use the exact same static-code-analysis method as the <strong><a href="https://CRAN.R-Project.org/package=future">future</a></strong> package use for identifying globals.  As the maintainer of the future framework, I collaborate with the maintainer of the <strong><a href="https://CRAN.R-Project.org/package=foreach">foreach</a></strong> package to implement this.</p>
 
+</div>
+
+<div class="include-after">
+
+</div>
 
 <script src="https://cdn.jsdelivr.net/combine/npm/@xiee/utils/js/center-img.min.js" async></script>
+<script>
+
+</script>
 </body>
 
 </html>

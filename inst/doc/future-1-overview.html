@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <title>A Future for R: A Comprehensive Overview</title>
 
@@ -21,6 +22,10 @@ body {
   margin: auto;
   padding: 1em;
   line-height: 1.5;
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
 }
 tt, code, pre {
   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
@@ -48,6 +53,7 @@ blockquote {
   border-left: 0.5em #eee solid;
 }
 hr { border: 1px #ddd dashed; }
+.frontmatter { text-align: center; }
 
 @media print {
   * {
@@ -79,10 +85,20 @@ hr { border: 1px #ddd dashed; }
 
 <meta name="keywords" content="R, package, vignette, future, promise, lazy evaluation, synchronous, asynchronous, parallel, cluster">
 <meta name="author" content="Henrik Bengtsson">
-
 </head>
 
 <body>
+<div class="include-before">
+
+</div>
+
+<div class="frontmatter">
+<div class="title"><h1>A Future for R: A Comprehensive Overview</h1></div>
+<div class="author"><h2></h2></div>
+<div class="date"><h3></h3></div>
+</div>
+
+<div class="body">
 <h1>A Future for R: A Comprehensive Overview</h1>
 <h2>Introduction</h2>
 <p>The purpose of the <a href="https://cran.r-project.org/package=future">future</a> package is to provide a very simple and uniform way of evaluating R expressions asynchronously using various resources available to the user.</p>
@@ -189,7 +205,6 @@ Hello world!
 </tr>
 </tbody>
 </table>
-<p><em>Comment:</em> The alias strategy <code>multiprocess</code> was deprecated in future (&gt;= 1.20.0) in favor of <code>multisession</code> and <code>multicore</code>.</p>
 <p>The future package is designed such that support for additional strategies can be implemented as well.  For instance, the <a href="https://cran.r-project.org/package=future.callr">future.callr</a> package provides future backends that evaluates futures in a background R process utilizing the <a href="https://cran.r-project.org/package=callr">callr</a> package - they work similarly to <code>multisession</code> futures but has a few advantages.  Continuing, the <a href="https://cran.r-project.org/package=future.batchtools">future.batchtools</a> package provides futures for all types of <em>cluster functions</em> (“backends”) that the <a href="https://cran.r-project.org/package=batchtools">batchtools</a> package supports.  Specifically, futures for evaluating R expressions via job schedulers such as Slurm, TORQUE/PBS, Oracle/Sun Grid Engine (SGE) and Load Sharing Facility (LSF) are also available.</p>
 <p>By default, future expressions are evaluated eagerly (= instantaneously) and synchronously (in the current R session).  This evaluation strategy is referred to as “sequential”.  In this section, we will go through each of these strategies and discuss what they have in common and how they differ.</p>
 <h3>Consistent Behavior Across Futures</h3>
@@ -578,8 +593,16 @@ demo(&quot;mandelbrot&quot;, package = &quot;future&quot;, ask = FALSE)
 demo(&quot;mandelbrot&quot;, package = &quot;future&quot;, ask = FALSE)
 </code></pre>
 
+</div>
+
+<div class="include-after">
+
+</div>
 
 <script src="https://cdn.jsdelivr.net/combine/npm/@xiee/utils/js/center-img.min.js" async></script>
+<script>
+
+</script>
 </body>
 
 </html>
