@@ -1,12 +1,14 @@
 Package: future
-Version: 1.33.0
+Version: 1.33.1
 Title: Unified Parallel and Distributed Processing in R for Everyone
 Imports: digest, globals (>= 0.16.1), listenv (>= 0.8.0), parallel,
         parallelly (>= 1.34.0), utils
 Suggests: methods, RhpcBLASctl, R.rsp, markdown
 VignetteBuilder: R.rsp
-Authors@R: c(person("Henrik", "Bengtsson", role=c("aut", "cre", "cph"),
-                                          email = "henrikb@braju.com"))
+Authors@R: c(person("Henrik", "Bengtsson",
+                    role = c("aut", "cre", "cph"),
+                    email = "henrikb@braju.com",
+                    comment = c(ORCID = "0000-0002-7579-5165")))
 Description: The purpose of this package is to provide a lightweight and
     unified Future API for sequential and parallel processing of R
     expression via futures.  The simplest way to evaluate an expression
@@ -31,8 +33,9 @@ URL: https://future.futureverse.org,
 BugReports: https://github.com/HenrikBengtsson/future/issues
 RoxygenNote: 7.2.3
 NeedsCompilation: no
-Packaged: 2023-07-01 15:44:52 UTC; henrik
+Packaged: 2023-12-21 22:22:38 UTC; henrik
 Author: Henrik Bengtsson [aut, cre, cph]
+    (<https://orcid.org/0000-0002-7579-5165>)
 Maintainer: Henrik Bengtsson <henrikb@braju.com>
 Repository: CRAN
-Date/Publication: 2023-07-01 18:00:03 UTC
+Date/Publication: 2023-12-22 07:20:02 UTC

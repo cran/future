@@ -120,7 +120,7 @@ table, .body h2 { border-bottom: 1px solid #666; }
 .body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
 .footnote-ref a::before { content: "["; }
 .footnote-ref a::after { content: "]"; }
-.footnotes::before {
+section.footnotes::before {
   content: "";
   display: block;
   max-width: 20em;
@@ -141,8 +141,6 @@ table, .body h2 { border-bottom: 1px solid #666; }
 <meta name="author" content="Henrik Bengtsson">
 </head>
 <body>
-<div class="include-before">
-</div>
 <div class="frontmatter">
 <div class="title"><h1>A Future for R: Non-Exportable Objects</h1></div>
 <div class="author"><h2></h2></div>
@@ -214,7 +212,7 @@ f &lt;- future({ cat(&quot;world!&quot;, file = con); flush(con) })
 </tr>
 <tr>
 <td align="left"><strong>keras</strong></td>
-<td align="left">keras.engine.sequential.Sequential (<code>externalptr</code>)</td>
+<td align="left">keras.engine.sequential.Sequential (<code>externalptr</code>), keras.engine.base_layer.Layer (<code>externalptr</code>)</td>
 </tr>
 <tr>
 <td align="left"><strong>magick</strong></td>
@@ -383,28 +381,58 @@ f &lt;- future(sum_1_to_n(10, 0))
 ## used in the future expression
 </code></pre>
 <h4 id="package-keras">Package: keras</h4>
-<p>The <strong><a href="https://cran.r-project.org/package=DBI">keras</a></strong> package provides an R interface to <a href="https://keras.io/">Keras</a>, which “is a high-level neural networks API developed with a focus on enabling fast experimentation”.  The R implementation accesses the Keras Python API via <strong><a href="https://cran.r-project.org/package=reticulate">reticulate</a></strong>.  However, Keras model instances in R make use of R connections and external pointers, which prevents them from being exported to external R processes.  For example, if the attempt to use a Keras model in a multisession workers, the worker will produce a run-time error:</p>
+<p>The <strong><a href="https://cran.r-project.org/package=DBI">keras</a></strong> package provides an R interface to
+<a href="https://keras.io/">Keras</a>, which “is a high-level neural networks API
+developed with a focus on enabling fast experimentation”.  The R
+implementation accesses the Keras Python API via <strong><a href="https://cran.r-project.org/package=reticulate">reticulate</a></strong>.
+However, Keras model instances in R make use of R connections and
+external pointers, which prevents them from being exported to external
+R processes.  For example, if the attempt to use a Keras model in a
+multisession workers, the worker will produce a run-time error:</p>
 <pre><code class="language-r">library(keras)
 
 library(future)
 plan(multisession)
 
-model &lt;- keras_model_sequential()
-f &lt;- future(model %&gt;% 
-       layer_dense(units = 256, activation = 'relu', input_shape = c(784)) %&gt;% 
-       layer_dropout(rate = 0.4) %&gt;% 
-       layer_dense(units = 128, activation = 'relu') %&gt;%
-       layer_dropout(rate = 0.3) %&gt;%
-       layer_dense(units = 10, activation = 'softmax'))
-model2 &lt;- value(f)
-Error in object$add(layer) : attempt to apply non-function
+## Adopted from the 'keras' vignettes
+inputs &lt;- layer_input(shape = shape(32))
+outputs &lt;- layer_dense(inputs, units = 1L)
+model &lt;- keras_model(inputs, outputs)
+model &lt;- compile(model, optimizer = &quot;adam&quot;, loss = &quot;mean_squared_error&quot;)
+
+test_input &lt;- array(runif(128 * 32), dim = c(128, 32))
+test_target &lt;- array(runif(128), dim = c(128, 1))
+fit(model, test_input, test_target)
+
+f &lt;- future({
+  stats::predict(model, test_input)
+}, seed = TRUE)
+pred &lt;- value(f)
+## Error in do.call(object$predict, args) : 
+##   'what' must be a function or character string
 </code></pre>
-<p>If we turn on <code>options(future.globals.onReference = &quot;error&quot;)</code>, we will catch this already when we create the future:</p>
+<p>This is error message is not very helpful.  But, if we turn on
+<code>options(future.globals.onReference = &quot;error&quot;)</code>, we get more
+clues;</p>
 <pre><code class="language-r">Error: Detected a non-exportable reference ('externalptr') in one of the
-globals ('model' of class 'keras.engine.sequential.Sequential') used in
+globals ('model' of class 'keras.engine.functional.Functional') used in
 the future expression
 </code></pre>
-<h4 id="package-magic">Package: magic</h4>
+<p>Functions <code>serialize_model()</code> and <code>unserialize_model()</code> of the
+<strong>keras</strong> package can be used as workaround to marshal and unmarshal
+non-exportable <strong>keras</strong> objects, e.g.</p>
+<pre><code class="language-r">.model &lt;- serialize_model(model)
+f &lt;- future({
+  model &lt;- unserialize_model(.model)
+  stats::predict(model, test_input)
+}, seed = TRUE)
+rm(.model) ## not needed anymore
+
+pred &lt;- value(f)
+str(pred)
+## num [1:128, 1] 0.6937 -0.048 0.2996 -0.0818 1.0673 ...
+</code></pre>
+<h4 id="package-magick">Package: magick</h4>
 <p>The <strong><a href="https://cran.r-project.org/package=magick">magick</a></strong> package provides an R-level API for <a href="https://imagemagick.org/">ImageMagick</a> to work with images.  When working with this API, the images are represented internally as external pointers of class ‘magick_image’ that cannot be be exported to another R process, e.g.</p>
 <pre><code class="language-r">library(future)
 plan(multisession)
@@ -893,9 +921,9 @@ model {
 } 
 &quot;
 
-y &lt;- rnorm(20) 
-data &lt;- list(N = 20, y = y); 
-fit &lt;- stan(model_code = code, model_name = &quot;example&quot;, 
+y &lt;- rnorm(20)
+data &lt;- list(N = 20, y = y)
+fit &lt;- stan(model_code = code, model_name = &quot;example&quot;,
             data = data, iter = 2012L, chains = 3L,
             sample_file = file.path(tempdir(), &quot;norm.csv&quot;))
 
@@ -921,8 +949,6 @@ str(e)
 #&gt;   ..$ chains    : chr [1:3] &quot;chain:1&quot; &quot;chain:2&quot; &quot;chain:3&quot;
 #&gt;   ..$ parameters: chr [1:2] &quot;mu&quot; &quot;lp__&quot;
 </code></pre>
-</div>
-<div class="include-after">
 </div>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>

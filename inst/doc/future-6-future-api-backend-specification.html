@@ -55,7 +55,7 @@ table, .body h2 { border-bottom: 1px solid #666; }
 .body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
 .footnote-ref a::before { content: "["; }
 .footnote-ref a::after { content: "]"; }
-.footnotes::before {
+section.footnotes::before {
   content: "";
   display: block;
   max-width: 20em;
@@ -76,8 +76,6 @@ table, .body h2 { border-bottom: 1px solid #666; }
 <meta name="author" content="Henrik Bengtsson">
 </head>
 <body>
-<div class="include-before">
-</div>
 <div class="frontmatter">
 <div class="title"><h1>Future API Backend Specification</h1></div>
 <div class="author"><h2></h2></div>
@@ -147,8 +145,6 @@ table, .body h2 { border-bottom: 1px solid #666; }
 <p>The value of <code>result()</code> should be the value from evaluating the <code>getExpression()</code> expression that <code>run()</code> launched.</p>
 <p>The <code>result()</code> method may produce <code>FutureError</code> error as created by <code>FutureError()</code> in case communication with the worker has broken down or the worker has terminated unexpectedly.</p>
 <p>The <code>result()</code> method must not update the RNG state.</p>
-</div>
-<div class="include-after">
 </div>
 </body>
 </html>
