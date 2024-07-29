@@ -365,7 +365,7 @@ print(v)
 #&gt; [1] 150   5
 </code></pre>
 <h4 id="package-bigmemory">Package: bigmemory</h4>
-<p>The <strong>[bigmemory]</strong> package provides mechanisms for working with very
+<p>The <strong><a href="https://cran.r-project.org/package=bigmemory">bigmemory</a></strong> package provides mechanisms for working with very
 large matrices that can be updated in-place, which helps save
 memory. For example,</p>
 <pre><code class="language-r">library(bigmemory)
@@ -383,7 +383,7 @@ void &lt;- g(x)
 print(x[1,1])
 #&gt; [1] 42
 </code></pre>
-<p>Note how <code>x</code> was updated in-place. This is achived by <code>big.matrix</code>
+<p>Note how <code>x</code> was updated in-place. This is achieved by <code>big.matrix</code>
 objects holds an external pointer to where the matrix data is stored;</p>
 <pre><code class="language-r">str(x)
 #&gt; Formal class 'big.matrix' [package &quot;bigmemory&quot;] with 1 slot
