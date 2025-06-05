@@ -128,37 +128,37 @@ section.footnotes {
 <tr>
 <td align="left"><strong>future</strong><br> <code>sequential</code></td>
 <td align="left">📶<br>♻️<br></td>
-<td align="left">sequentially and in the current R process; default</td>
+<td align="left">sequentially and in the current R process; default<br>Example: <code>plan(sequential)</code></td>
 </tr>
 <tr>
 <td align="left"><strong>future</strong><br> <code>multisession</code></td>
 <td align="left">📶<br>♻️<br></td>
-<td align="left">parallelly via background R sessions on current machine</td>
+<td align="left">parallelly via background R sessions on current machine<br>Examples: <code>plan(multisession)</code> and <code>plan(multisession, workers = 2)</code></td>
 </tr>
 <tr>
 <td align="left"><strong>future</strong><br> <code>cluster</code></td>
 <td align="left">📶<br>♻️*<br></td>
-<td align="left">parallelly in external R sessions on current, local, and/or remote machines</td>
+<td align="left">parallelly in external R sessions on current, local, and/or remote machines<br>Examples: <code>plan(cluster, workers = &quot;raspberry-pi&quot;)</code>, <code>plan(cluster, workers = c(&quot;localhost&quot;, &quot;n1&quot;, &quot;n1&quot;, &quot;pi.example.org&quot;))</code></td>
 </tr>
 <tr>
 <td align="left"><strong>future</strong><br> <code>multicore</code></td>
 <td align="left">📶<br>♻️<br></td>
-<td align="left">(not recommended) parallelly via forked R processes on current machine; not with GUIs like RStudio; not on Windows</td>
+<td align="left">(not recommended) parallelly via forked R processes on current machine; not with GUIs like RStudio; not on Windows<br>Examples: <code>plan(multicore)</code> and <code>plan(multicore, workers = 2)</code></td>
 </tr>
 <tr>
 <td align="left"><strong><a href="https://future.callr.futureverse.org">future.callr</a></strong><br> <code>callr</code></td>
 <td align="left">📶(next)<br>♻️(next)<br></td>
-<td align="left">parallelly via transient <strong><a href="https://cran.r-project.org/package=callr">callr</a></strong> background R sessions on current machine; all memory is returned when as each future is resolved</td>
+<td align="left">parallelly via transient <strong><a href="https://cran.r-project.org/package=callr">callr</a></strong> background R sessions on current machine; all memory is returned when as each future is resolved<br>Examples: <code>plan(callr)</code> and <code>plan(callr, workers = 2)</code></td>
 </tr>
 <tr>
 <td align="left"><strong><a href="https://future.mirai.futureverse.org">future.mirai</a></strong><br> <code>mirai_multisession</code></td>
 <td align="left">📶(next)<br>♻️(next)<br></td>
-<td align="left">parallelly via <strong><a href="https://cran.r-project.org/package=mirai">mirai</a></strong> background R sessions on current machine; low latency</td>
+<td align="left">parallelly via <strong><a href="https://cran.r-project.org/package=mirai">mirai</a></strong> background R sessions on current machine; low latency<br>Examples: <code>plan(mirai_multisession)</code> and <code>plan(mirai_multisession, workers = 2)</code></td>
 </tr>
 <tr>
 <td align="left"><strong><a href="https://future.mirai.futureverse.org">future.mirai</a></strong><br> <code>mirai_cluster</code></td>
 <td align="left">♻️(next)<br></td>
-<td align="left">parallelly via <strong><a href="https://cran.r-project.org/package=mirai">mirai</a></strong> daemons running locally or remotely</td>
+<td align="left">parallelly via <strong><a href="https://cran.r-project.org/package=mirai">mirai</a></strong> daemons running locally or remotely<br>Example: <code>plan(mirai_cluster)</code></td>
 </tr>
 <tr>
 <td align="left"><strong><a href="https://future.batchtools.futureverse.org">future.batchtools</a></strong><br> <code>batchtools_lsf</code><br><code>batchtools_openlava</code><br><code>batchtools_sge</code><br><code>batchtools_slurm</code><br><code>batchtools_torque</code></td>
@@ -168,7 +168,7 @@ section.footnotes {
 </tbody>
 </table>
 <p>📶: futures relay progress updates in real-time, e.g. <strong><a href="https://progressr.futureverse.org">progressr</a></strong><br>
-♻️: futures are interruptible and restartable; * disabled by default<br>
+♻️: futures are interruptible and restartable; * interrupts are disabled by default<br>
 (next): next release; (soon): in a near-future release</p>
 </div>
 </body>

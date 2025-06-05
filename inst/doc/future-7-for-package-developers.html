@@ -168,7 +168,7 @@ plan(cluster, workers = rep(c(&quot;n1.remote.org&quot;, &quot;n2.remote.org&quo
 <p>or</p>
 <pre><code class="language-r">y &lt;- my_fcn(x, parallel = TRUE)
 </code></pre>
-<p>depending on their needs.  However, if another package developer decide to call you function in their function, they now have to expose that <code>parallel</code> argument to the users of their function, e.g.</p>
+<p>depending on their needs.  However, if another package developer decide to call your function in their function, they now have to expose that <code>parallel</code> argument to the users of their function, e.g.</p>
 <pre><code class="language-r">their_fcn &lt;- function(x, parallel = FALSE) {
   x2 &lt;- preprocess(x)
   y &lt;- my_fcn(x2, parallel = parallel)
@@ -218,6 +218,22 @@ Error: connections left open:
 Execution halted
 </code></pre>
 <p>If you for some reason do not like to display reset of the future backend in the help documentation, but you still want it run, wrap the statement in an Rd <code>\dontshow{}</code> statement.</p>
+<h2 id="sec:writing-vignettes">Writing vignettes</h2>
+<p>Importantly, if you use the <code>multisession</code> backend in a vignette, you
+must manually specify the number of workers, i.e.</p>
+<pre><code class="language-r">plan(multisession, workers = 2)
+</code></pre>
+<p>The reason for having to manually limit the number workers in
+vignettes, while it is automatically limited for us in package
+examples and package tests, is that <code>R CMD check --as-cran</code> does <em>not</em>
+set environment variable <code>_R_CHECK_LIMIT_CORES_</code> when re-building
+vignettes, resulting in the default <code>workers = availableCores()</code> to
+use whatever number of cores that the operating system has given our R
+process.</p>
+<p>Don’t forget to stop the parallel workers by calling</p>
+<pre><code class="language-r">plan(sequential)
+</code></pre>
+<p>at the end of you vignette.</p>
 <h2 id="sec:testing-a-package-that-relies-on-futures">Testing a package that relies on futures</h2>
 <p>If you want to make sure your code works when running sequentially as well as when running in parallel, it is often good enough to have package tests that run the code with:</p>
 <pre><code class="language-r">plan(multisession)
@@ -259,7 +275,8 @@ at the end.  To stop ‘multisession’ workers, call:</p>
 plan(cluster, workers = cl)
 </code></pre>
 <p>make sure to stop such clusters at the end using</p>
-<pre><code class="language-r">parallel::stopCluster(cl)
+<pre><code class="language-r">plan(sequential)
+parallel::stopCluster(cl)
 </code></pre>
 <p>(*) Currently, examples are excluded from the detritus checks.
 This was the validated with R-devel revision 82991 (2022-10-02).</p>
