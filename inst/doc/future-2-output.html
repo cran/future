@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<meta name="generator" content="litedown 0.8">
+<meta name="generator" content="litedown 0.9">
 <title></title>
 <style type="text/css">
 body {
@@ -107,11 +107,9 @@ section.footnotes {
   body:not(.pagesjs) pre:has(.line-numbers):not(:hover) { white-space: pre; }
 }
 </style>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.14/css/prism-xcode.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.21/css/prism-xcode.min.css">
 <meta name="keywords" content="R, package, vignette, future, promise, output, standard output, stdout, standard error, stderr, message, condition">
 <meta name="author" content="Henrik Bengtsson">
-<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>
 </head>
 <body>
 <div class="frontmatter">
@@ -296,5 +294,7 @@ ping
 <h2 id="sec:known-limitations">Known limitations</h2>
 <p>It is only the standard output that is relayed.  It is <em>not possible</em> to relay output send to the standard error (stderr), e.g. output by <code>cat(..., file = stderr())</code> will be lost.  This is due to a <a href="https://github.com/HenrikBengtsson/Wishlist-for-R/issues/55">limitation in R</a>, preventing us from capturing stderr in a reliable way, particularity across all backends.  However, note that the captured messages by <code>message()</code> are outputted to stderr (as expected) when resignaled/relayed.</p>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>
 </body>
 </html>

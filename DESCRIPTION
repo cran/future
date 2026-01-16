@@ -1,5 +1,5 @@
 Package: future
-Version: 1.68.0
+Version: 1.69.0
 Title: Unified Parallel and Distributed Processing in R for Everyone
 Depends: R (>= 3.2.0)
 Imports: digest, globals (>= 0.18.0), listenv (>= 0.8.0), parallel,
@@ -36,7 +36,7 @@ Language: en-US
 Encoding: UTF-8
 RoxygenNote: 7.3.3
 Collate: '000.bquote.R' '000.import.R' '000.re-exports.R'
-        '010.tweakable.R' '010.utils-parallelly.R'
+        '009.deprecation.R' '010.tweakable.R' '010.utils-parallelly.R'
         'backend_api-01-FutureBackend-class.R'
         'backend_api-03.MultiprocessFutureBackend-class.R'
         'backend_api-11.ClusterFutureBackend-class.R'
@@ -59,9 +59,9 @@ Collate: '000.bquote.R' '000.import.R' '000.re-exports.R'
         'protected_api-FutureGlobals-class.R'
         'protected_api-FutureResult-class.R' 'protected_api-futures.R'
         'protected_api-globals.R' 'protected_api-journal.R'
-        'protected_api-resolve.R' 'protected_api-signalConditions.R'
-        'testme.R' 'utils-basic.R' 'utils-conditions.R'
-        'utils-connections.R' 'utils-debug.R'
+        'protected_api-resolve.R' 'protected_api-result.R'
+        'protected_api-signalConditions.R' 'testme.R' 'utils-basic.R'
+        'utils-conditions.R' 'utils-connections.R' 'utils-debug.R'
         'utils-immediateCondition.R' 'utils-marshalling.R'
         'utils-objectSize.R' 'utils-options.R' 'utils-prune_pkg_code.R'
         'utils-registerClusterTypes.R' 'utils-rng_utils.R'
@@ -74,9 +74,9 @@ Collate: '000.bquote.R' '000.import.R' '000.re-exports.R'
         'utils_api-plan.R' 'utils_api-plan-with.R'
         'utils_api-sessionDetails.R' 'utils_api-tweak.R' 'zzz.R'
 NeedsCompilation: no
-Packaged: 2025-11-16 21:57:30 UTC; hb
+Packaged: 2026-01-16 00:33:37 UTC; hb
 Author: Henrik Bengtsson [aut, cre, cph] (ORCID:
     <https://orcid.org/0000-0002-7579-5165>)
 Maintainer: Henrik Bengtsson <henrikb@braju.com>
 Repository: CRAN
-Date/Publication: 2025-11-17 06:10:09 UTC
+Date/Publication: 2026-01-16 14:40:07 UTC
