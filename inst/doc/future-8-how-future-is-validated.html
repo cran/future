@@ -119,9 +119,9 @@ section.footnotes {
 <p>First, all the essential core packages part of the future framework,
 <strong><a href="https://future.futureverse.org">future</a></strong>, <strong><a href="https://parallelly.futureverse.org">parallelly</a></strong>, <strong><a href="https://globals.futureverse.org">globals</a></strong>, and <strong><a href="https://listenv.futureverse.org">listenv</a></strong>, implement a
 rich set of package tests.  These are validated regularly across the
-wide-range of operating systems (Linux, macOS, and MS Windows) and R
+wide range of operating systems (Linux, macOS, and MS Windows) and R
 versions available on CRAN, on continuous integration (CI) services
-(GitHub Actions), an on <a href="https://r-hub.github.io/rhub/">R-hub</a>. The core packages are also tested with
+(GitHub Actions), and on <a href="https://r-hub.github.io/rhub/">R-hub</a>. The core packages are also tested with
 non-English locale settings, including Korean, Simplified Chinese
 (China) and Traditional Chinese (Taiwan). They are also verified to
 work with single-core and dual-core machines, which may be the case
@@ -137,11 +137,11 @@ We also test with <code>NOT_CRAN = true</code>, to further increase the test
 coverage.</p>
 <p>Third, a suite of <em>Future API conformance tests</em> available in the
 <strong><a href="https://future.tests.futureverse.org">future.tests</a></strong> package validates the
-correctness of all future backends.  Any new future backend developed, must
+correctness of all future backends.  Any new future backend developed must
 pass these tests to comply with the <em>Future API</em>.
 By conforming to this API, the end-user can trust that the backend will
 produce the same correct and reproducible results as any other backend,
-including the ones that the developer have tested on.
+including the ones that the developer has tested on.
 Also, by making it the responsibility of the developer to assert that their
 new future backend conforms to the <em>Future API</em>, we relieve other
 developers from having to test that their future-based software works on all
@@ -166,12 +166,12 @@ parallel foreach adaptor because they do not properly export globals or
 declare package dependencies.  The exception is when using the sequential
 <em>doSEQ</em> adaptor (default), fork-based ones such as <strong><a href="https://CRAN.R-Project.org/package=doMC">doMC</a></strong>, or
 the generic <strong><a href="https://doFuture.futureverse.org">doFuture</a></strong>, which supports any future backend and
-relies on the future framework for handling globals and packages(*)</p>
+relies on the future framework for handling globals and packages(*).</p>
 <p>Lastly, analogously to above reverse-dependency checks of each new release,
 CRAN and Bioconductor continuously run checks on all these direct, but
 also indirect, reverse dependencies, which further increases the validation
 of the <em>Future API</em> and the future ecosystem at large.</p>
-<p>(*) There is a plan to update <strong><a href="https://CRAN.R-Project.org/package=foreach">foreach</a></strong> to use the exact same static-code-analysis method as the <strong><a href="https://future.futureverse.org">future</a></strong> package use for identifying globals.  As the maintainer of the future framework, I collaborate with the maintainer of the <strong><a href="https://CRAN.R-Project.org/package=foreach">foreach</a></strong> package to implement this.</p>
+<p>(*) There is a plan to update <strong><a href="https://CRAN.R-Project.org/package=foreach">foreach</a></strong> to use the exact same static-code-analysis method as the <strong><a href="https://future.futureverse.org">future</a></strong> package uses for identifying globals.  As the maintainer of the future framework, I collaborate with the maintainer of the <strong><a href="https://CRAN.R-Project.org/package=foreach">foreach</a></strong> package to implement this.</p>
 </div>
 </body>
 </html>

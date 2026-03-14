@@ -117,7 +117,7 @@ section.footnotes {
 <div class="body">
 <h1 id="chp:a-future-for-r-text-and-message-output">A Future for R: Text and Message Output</h1>
 <p>Futures will <em>relay</em> output produced by functions such as <code>cat()</code>, <code>print()</code> and <code>str()</code>.  More specifically, output sent to the standard output (stdout) while a future is evaluated will be captured and <em>re-outputted (“relayed”) when the value of the future is queried</em>.  Messages produced by <code>message()</code>, which formally are R conditions are also captured and resignaled (“relayed”) as messages in the main R session.  Importantly, this works identically regardless of future backend used.</p>
-<p>For simplicitly, lets start with an illustration on how standard output (“stdout”) is captured and relayed:</p>
+<p>For simplicity, let’s start with an illustration on how standard output (“stdout”) is captured and relayed:</p>
 <pre><code class="language-r">&gt; library(future)
 &gt; plan(multisession)
 
@@ -187,7 +187,7 @@ Hello world!
 &gt; a
 [1] 42
 </code></pre>
-<p>Next, lets see what happens if we use <code>message()</code> to produce output:</p>
+<p>Next, let’s see what happens if we use <code>message()</code> to produce output:</p>
 <pre><code class="language-r">&gt; library(future)
 &gt; plan(multisession)
 &gt; fa &lt;- future({ message(&quot;Hello world!&quot;); 42L })
@@ -195,7 +195,7 @@ Hello world!
 Hello world!
 [1] 42
 </code></pre>
-<p>Note that contrary to the captured stdout, which is captured as one single block output, messages are conditions that are captured separately.  Unfortunately, it is <em>not</em> possible to preserve the ordering of interweaved stdout and message output.  When using futures, stdout output will always be relayed first followed by each of the individual conditions captured.  For example,</p>
+<p>Note that contrary to the captured stdout, which is captured as one single block output, messages are conditions that are captured separately.  Unfortunately, it is <em>not</em> possible to preserve the ordering of interweaved stdout and message output.  When using futures, stdout output will always be relayed first, followed by each of the individual conditions captured.  For example,</p>
 <pre><code class="language-r">&gt; library(future)
 &gt; plan(multisession)
 &gt; fa &lt;- future({ message(&quot;Hello&quot;); print(1:3); message(&quot;world!&quot;); cat(&quot;ping\n&quot;); 42L })
@@ -292,7 +292,7 @@ ping
 [1] 42
 </code></pre>
 <h2 id="sec:known-limitations">Known limitations</h2>
-<p>It is only the standard output that is relayed.  It is <em>not possible</em> to relay output send to the standard error (stderr), e.g. output by <code>cat(..., file = stderr())</code> will be lost.  This is due to a <a href="https://github.com/HenrikBengtsson/Wishlist-for-R/issues/55">limitation in R</a>, preventing us from capturing stderr in a reliable way, particularity across all backends.  However, note that the captured messages by <code>message()</code> are outputted to stderr (as expected) when resignaled/relayed.</p>
+<p>It is only the standard output that is relayed.  It is <em>not possible</em> to relay output sent to the standard error (stderr), e.g. output sent by <code>cat(..., file = stderr())</code> will be lost.  This is due to a <a href="https://github.com/HenrikBengtsson/Wishlist-for-R/issues/55">limitation in R</a>, preventing us from capturing stderr in a reliable way, particularly across all backends.  However, note that the captured messages by <code>message()</code> are outputted to stderr (as expected) when resignaled/relayed.</p>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>

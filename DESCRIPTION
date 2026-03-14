@@ -1,9 +1,9 @@
 Package: future
-Version: 1.69.0
+Version: 1.70.0
 Title: Unified Parallel and Distributed Processing in R for Everyone
 Depends: R (>= 3.2.0)
 Imports: digest, globals (>= 0.18.0), listenv (>= 0.8.0), parallel,
-        parallelly (>= 1.44.0), utils
+        parallelly (>= 1.44.0), tools, utils
 Suggests: methods, RhpcBLASctl, R.rsp, markdown
 VignetteBuilder: R.rsp
 Authors@R: c(person("Henrik", "Bengtsson",
@@ -74,9 +74,9 @@ Collate: '000.bquote.R' '000.import.R' '000.re-exports.R'
         'utils_api-plan.R' 'utils_api-plan-with.R'
         'utils_api-sessionDetails.R' 'utils_api-tweak.R' 'zzz.R'
 NeedsCompilation: no
-Packaged: 2026-01-16 00:33:37 UTC; hb
+Packaged: 2026-03-13 21:01:52 UTC; hb
 Author: Henrik Bengtsson [aut, cre, cph] (ORCID:
     <https://orcid.org/0000-0002-7579-5165>)
 Maintainer: Henrik Bengtsson <henrikb@braju.com>
 Repository: CRAN
-Date/Publication: 2026-01-16 14:40:07 UTC
+Date/Publication: 2026-03-14 06:10:29 UTC

@@ -116,12 +116,12 @@ section.footnotes {
 </div>
 <div class="body">
 <h1 id="chp:a-future-for-r-best-practices-for-package-developers">A Future for R: Best Practices for Package Developers</h1>
-<p>Using future code in package is not much different from other type of package code or when using futures in R scripts.  However, there are a few things that are useful to know about in order to minimize the risk for surprises to the end user.</p>
+<p>Using future code in a package is not much different from other types of package code or when using futures in R scripts.  However, there are a few things that are useful to know about in order to minimize the risk of surprises to the end user.</p>
 <h2 id="sec:the-future-smell-test">The future smell test</h2>
-<p>The by far most common and popular future backend is to parallelize on the local machine, e.g. <code>plan(multisession)</code>.  This is often good enough in most situations but note that some end-users have access to multiple machines and might want to run your code using all of them to speed it up beyond what a single machine can do.  Because of this, avoid as far as possible making assumption about your code will only run on the local machine.  A good “smell test” is to ask yourself:</p>
+<p>By far the most common and popular future backend is to parallelize on the local machine, e.g. <code>plan(multisession)</code>.  This is often good enough in most situations but note that some end-users have access to multiple machines and might want to run your code using all of them to speed it up beyond what a single machine can do.  Because of this, avoid as far as possible making assumptions that your code will only run on the local machine.  A good “smell test” is to ask yourself:</p>
 <p><em>- Will my future code work if it ends up running on the other side of the world?</em></p>
 <p>Regardless of performance, if you answer “Yes”, you have already embraced the core philosophy of the future framework.  If you answer “Maybe” or “No”, see if you can rewrite it.</p>
-<p>For instance, if your future code made an assumption that it will have access to our local file system, as in:</p>
+<p>For instance, if your future code made an assumption that it will have access to the local file system, as in:</p>
 <pre><code class="language-r">f &lt;- future({
   data &lt;- read_tsv(file)
   analyze(data)
@@ -139,17 +139,17 @@ f &lt;- future({
 plan(multisession)
 plan(cluster, workers = rep(c(&quot;n1.remote.org&quot;, &quot;n2.remote.org&quot;, &quot;n3.remote.org&quot;), each = 32))
 </code></pre>
-<p>Remember, as developers we never know what compute resources the end-user has access to right now or they will have access to in six month.  Who knows, your code might even end up running on 2,000 cores located on The Moon twenty years from now.</p>
+<p>Remember, as developers we never know what compute resources the end-user has access to right now or they will have access to in six months.  Who knows, your code might even end up running on 2,000 cores located on The Moon twenty years from now.</p>
 <h2 id="sec:avoid-changing-the-future-backend">Avoid changing the future backend</h2>
-<p>For reasons like the ones mentioned above, refrain from setting <code>plan()</code> in a function.  It is better to leave it to the end-user to decided how they want to parallelize.  One reason for this is that we can never know how and in what context our code will run.  For example, they might use futures to parallelize a function call in some other package and that package code calls your package internally.  If you set <code>plan(multisession)</code> internally without undoing, you might mess up the <code>plan()</code> that is already set breaking any further parallelization.</p>
-<p>If you still think it is necessary to set <code>plan()</code>, make sure to undo when the function exits, also on errors.  This can be done by using <code>with(plan(...), local = TRUE)</code>, e.g.</p>
+<p>For reasons like the ones mentioned above, refrain from setting <code>plan()</code> in a function.  It is better to leave it to the end-user to decide how they want to parallelize.  One reason for this is that we can never know how and in what context our code will run.  For example, they might use futures to parallelize a function call in some other package and that package code calls your package internally.  If you set <code>plan(multisession)</code> internally without undoing, you might mess up the <code>plan()</code> that is already set, breaking any further parallelization.</p>
+<p>If you still think it is necessary to set <code>plan()</code>, make sure to undo it when the function exits, also on errors.  This can be done by using <code>with(plan(...), local = TRUE)</code>, e.g.</p>
 <pre><code class="language-r">my_fcn &lt;- function(x) {
   with(plan(multisession), local = TRUE)
   y &lt;- analyze(x)
   summarize(y)
 }
 </code></pre>
-<p>The need for setting the future backend within a function often comes from developers wanting to add an argument to their function that allows the end-user to specify whether they want to run the function in parallel or sequentially.  This often result in code like:</p>
+<p>The need for setting the future backend within a function often comes from developers wanting to add an argument to their function that allows the end-user to specify whether they want to run the function in parallel or sequentially.  This often results in code like:</p>
 <pre><code class="language-r">my_fcn &lt;- function(x, parallel = FALSE) {
   if (parallel) {
     with(plan(multisession), local = TRUE)
@@ -166,7 +166,7 @@ plan(cluster, workers = rep(c(&quot;n1.remote.org&quot;, &quot;n2.remote.org&quo
 <p>or</p>
 <pre><code class="language-r">y &lt;- my_fcn(x, parallel = TRUE)
 </code></pre>
-<p>depending on their needs.  However, if another package developer decide to call your function in their function, they now have to expose that <code>parallel</code> argument to the users of their function, e.g.</p>
+<p>depending on their needs.  However, if another package developer decides to call your function in their function, they now have to expose that <code>parallel</code> argument to the users of their function, e.g.</p>
 <pre><code class="language-r">their_fcn &lt;- function(x, parallel = FALSE) {
   x2 &lt;- preprocess(x)
   y &lt;- my_fcn(x2, parallel = parallel)
@@ -231,7 +231,7 @@ process.</p>
 <p>Don’t forget to stop the parallel workers by calling</p>
 <pre><code class="language-r">plan(sequential)
 </code></pre>
-<p>at the end of you vignette.</p>
+<p>at the end of your vignette.</p>
 <h2 id="sec:testing-a-package-that-relies-on-futures">Testing a package that relies on futures</h2>
 <p>If you want to make sure your code works when running sequentially as well as when running in parallel, it is often good enough to have package tests that run the code with:</p>
 <pre><code class="language-r">plan(multisession)
@@ -277,7 +277,7 @@ plan(cluster, workers = cl)
 parallel::stopCluster(cl)
 </code></pre>
 <p>(*) Currently, examples are excluded from the detritus checks.
-This was the validated with R-devel revision 82991 (2022-10-02).</p>
+This was validated with R-devel revision 82991 (2022-10-02).</p>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>

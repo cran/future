@@ -137,7 +137,7 @@ $ Rscript -e &quot;class(future::plan())&quot;
 <p>When loaded, the <strong>future</strong> package checks for the command-line option <code>--parallel=ncores</code> (short <code>-p ncores</code>) and sets the future backend (via option <code>future.plan</code>) and the number of available cores (via option <code>mc.cores</code>) accordingly.  This provides a convenient mechanism for specifying parallel future processing from the command line.  For example, if we start R with</p>
 <pre><code class="language-sh">$ R --quiet --args --parallel=2
 </code></pre>
-<p>then future will interpret this as we wish to resolve futures in parallel using 2 cores.  More specifically, we get that</p>
+<p>then the future package will interpret this as we wish to resolve futures in parallel using 2 cores.  More specifically, we get that</p>
 <pre><code class="language-r">&gt; availableCores()
 mc.cores
        2
