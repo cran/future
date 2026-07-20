@@ -1,5 +1,5 @@
 Package: future
-Version: 1.70.0
+Version: 1.75.0
 Title: Unified Parallel and Distributed Processing in R for Everyone
 Depends: R (>= 3.2.0)
 Imports: digest, globals (>= 0.18.0), listenv (>= 0.8.0), parallel,
@@ -26,7 +26,7 @@ Description: The purpose of this package is to provide a lightweight and
     Another strength of this package is that global variables and functions
     are automatically identified and exported as needed, making it
     straightforward to tweak existing code to make use of futures.
-License: LGPL (>= 2.1)
+License: Apache License (>= 2)
 LazyLoad: TRUE
 ByteCompile: TRUE
 URL: https://future.futureverse.org,
@@ -34,7 +34,6 @@ URL: https://future.futureverse.org,
 BugReports: https://github.com/futureverse/future/issues
 Language: en-US
 Encoding: UTF-8
-RoxygenNote: 7.3.3
 Collate: '000.bquote.R' '000.import.R' '000.re-exports.R'
         '009.deprecation.R' '010.tweakable.R' '010.utils-parallelly.R'
         'backend_api-01-FutureBackend-class.R'
@@ -73,10 +72,11 @@ Collate: '000.bquote.R' '000.import.R' '000.re-exports.R'
         'utils_api-minifuture.R' 'utils_api-nbrOfWorkers.R'
         'utils_api-plan.R' 'utils_api-plan-with.R'
         'utils_api-sessionDetails.R' 'utils_api-tweak.R' 'zzz.R'
+Config/roxygen2/version: 8.0.0
 NeedsCompilation: no
-Packaged: 2026-03-13 21:01:52 UTC; hb
+Packaged: 2026-07-19 23:19:44 UTC; hb
 Author: Henrik Bengtsson [aut, cre, cph] (ORCID:
     <https://orcid.org/0000-0002-7579-5165>)
 Maintainer: Henrik Bengtsson <henrikb@braju.com>
 Repository: CRAN
-Date/Publication: 2026-03-14 06:10:29 UTC
+Date/Publication: 2026-07-20 15:10:11 UTC
