@@ -1,5 +1,5 @@
 Package: future
-Version: 1.75.0
+Version: 1.76.0
 Title: Unified Parallel and Distributed Processing in R for Everyone
 Depends: R (>= 3.2.0)
 Imports: digest, globals (>= 0.18.0), listenv (>= 0.8.0), parallel,
@@ -72,11 +72,11 @@ Collate: '000.bquote.R' '000.import.R' '000.re-exports.R'
         'utils_api-minifuture.R' 'utils_api-nbrOfWorkers.R'
         'utils_api-plan.R' 'utils_api-plan-with.R'
         'utils_api-sessionDetails.R' 'utils_api-tweak.R' 'zzz.R'
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0
 NeedsCompilation: no
-Packaged: 2026-07-19 23:19:44 UTC; hb
+Packaged: 2026-09-24 03:40:26 UTC; hb
 Author: Henrik Bengtsson [aut, cre, cph] (ORCID:
     <https://orcid.org/0000-0002-7579-5165>)
 Maintainer: Henrik Bengtsson <henrikb@braju.com>
 Repository: CRAN
-Date/Publication: 2026-07-20 15:10:11 UTC
+Date/Publication: 2026-09-24 10:30:09 UTC
