@@ -236,7 +236,7 @@ f &lt;- future({ cat(&quot;world!&quot;, file = con); flush(con) })
 </tr>
 <tr>
 <td align="left"><strong>terra</strong></td>
-<td align="left">SpatRaster, SpatVector (<code>externalptr</code>)</td>
+<td align="left">SpatRaster, SpatVector, SpatRasterDataset, SpatRasterCollection (<code>externalptr</code>)</td>
 </tr>
 <tr>
 <td align="left"><strong>udpipe</strong></td>
@@ -707,6 +707,7 @@ d %&lt;-% dim(data)
 ## the globals ('data' of class 'tbl_spark') used in the future expression
 </code></pre>
 <h4 id="sec:package-terra">Package: terra</h4>
+<p>The <strong><a href="https://cran.r-project.org/package=terra">terra</a></strong> package provides classes for spatial data analysis (<code>SpatRaster</code>, <code>SpatVector</code>, <code>SpatRasterDataset</code>, etc.) that internally hold external C++ pointers to objects in memory.  Consequently, they cannot be exported directly to parallel workers.  For example:</p>
 <pre><code class="language-r">library(future)
 plan(multisession)
 library(terra)
@@ -715,7 +716,7 @@ file &lt;- system.file(&quot;ex/lux.shp&quot;, package = &quot;terra&quot;)
 v &lt;- vect(file)
 dv %&lt;-% dim(v)
 dv
-Error in x@ptr$nrow() : external pointer is not valid
+## Error in x@ptr$nrow() : external pointer is not valid
 
 file &lt;- system.file(&quot;ex/elev.tif&quot;, package = &quot;terra&quot;)
 r &lt;- rast(file)
@@ -732,12 +733,12 @@ dv %&lt;-% dim(v)
 ## 'RegisteredNativeSymbol') in one of the globals ('v' of class
 ## 'SpatVector') used in the future expression
 
-dr %&lt;-% dim(data)
+dr %&lt;-% dim(r)
 ## Error: Detected a non-exportable reference ('externalptr' of class
 ## 'RegisteredNativeSymbol') in one of the globals ('r' of class
 ## 'SpatRaster') used in the future expression
 </code></pre>
-<p>Functions <code>wrap()</code> and <code>unwrap()</code> of the <strong>terra</strong> package can be used as workaround to marshal and unmarshal non-exportable <strong>terra</strong> objects, e.g.</p>
+<p>Functions <code>wrap()</code> and <code>unwrap()</code> of the <strong>terra</strong> package can be used as a workaround to marshal and unmarshal non-exportable <strong>terra</strong> objects, e.g.</p>
 <pre><code class="language-r">library(future)
 plan(multisession)
 library(terra)
@@ -751,7 +752,7 @@ dv %&lt;-% {
 }
 rm(.v) ## not needed anymore
 dv
-[1] 12  6
+## [1] 12  6
 </code></pre>
 <p>and</p>
 <pre><code class="language-r">file &lt;- system.file(&quot;ex/elev.tif&quot;, package = &quot;terra&quot;)
@@ -763,9 +764,17 @@ dr %&lt;-% {
 }
 rm(.r) ## not needed anymore
 dr
-[1] 90 95  1
+## [1] 90 95  1
 </code></pre>
-<p>For more details, see <code>help(&quot;wrap&quot;, package = &quot;terra&quot;)</code>.</p>
+<p>They can also be used when returning <strong>terra</strong> objects from a future back to the calling process.</p>
+<p>Other suggested approaches to parallel processing with <strong>terra</strong> include:</p>
+<ul>
+<li>Passing file paths instead of spatial objects and opening datasets directly on the workers with <code>rast()</code> or <code>vect()</code>.</li>
+<li>Partitioning large rasters into spatial tiles (e.g. using <code>tile_apply()</code> or <code>window()</code>).</li>
+<li>Extracting and exchanging raw cell values (e.g. via <code>values()</code>) as plain R vectors or matrices.</li>
+<li>Relying on <strong>terra</strong>’s built-in parallelization (the <code>cores</code> argument in functions such as <code>app()</code>, <code>predict()</code>, and <code>focal()</code>) or internal multithreading via Intel TBB (<code>terraOptions(parallel = TRUE)</code>).</li>
+</ul>
+<p>For detailed documentation and examples of these strategies, see Section <em>The terra package -&gt; Parallelization</em> at <a href="https://rspatial.org/pkg/10-parallel.html">https://rspatial.org/pkg/10-parallel.html</a> and <code>help(&quot;wrap&quot;, package = &quot;terra&quot;)</code>.</p>
 <h4 id="sec:package-udpipe">Package: udpipe</h4>
 <pre><code class="language-r">library(future)
 plan(multisession)
